@@ -9,7 +9,7 @@ struct Vec2 {
         return x * v.x + y * v.y;
     }
     float len() {
-        return sqrt(this.dot(this));
+        return sqrt(this->dot(*this));
     }
 };
 
