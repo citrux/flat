@@ -29,8 +29,8 @@ struct BandScatteringEntry {
 };
 
 struct Band {
-    const float gamma = 0.35;
-    const float delta = 0.1;
+    float gamma;
+    float delta;
 
     float acoustic_phonon_constant;
     float optical_phonon_constant;
@@ -42,12 +42,12 @@ struct Band {
     float momentum_precision;
 
     float energy(float momentum);
-    float energy(Vec2 momentum);
+    float energy(Vec2 const & momentum);
     float velocity(float momentum);
-    Vec2 velocity(Vec2 momentum);
+    Vec2 velocity(Vec2 const & momentum);
 
-    bool acoustic_phonon_scattering(Particle & p);
-    bool optical_phonon_scattering(Particle & p);
+    bool acoustic_phonon_scattering(Particle & p, float dt);
+    bool optical_phonon_scattering(Particle & p, float dt);
 
     Band();
     ~Band() {};

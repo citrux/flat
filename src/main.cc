@@ -49,7 +49,7 @@ int main(int argc, char const *argv[])
     Ec *= field_dimensionless_factor;
     E *= field_dimensionless_factor;
     H *= v_f / c * field_dimensionless_factor;
-    omega = omega * dt;
+    omega *= dt;
 
     int s = all_time / dt + 1;
 
@@ -65,19 +65,18 @@ int main(int argc, char const *argv[])
     for (int i = 0; i < n; ++i) {
         Particle particle(seeds[i]);
         particle.band = &bands[0];
-        datas[i].power = 0;
         particle.p = {0, 0};
         for (int t = 0; t < s; ++t) {
             Vec2 v = particle.band->velocity(particle.p);
-            Vec2 f = Ec + E * cos(omega * t) + Vec2(v.y, -v.x) * H;
+            Vec2 f = Ec + E * Vec2(cos(omega * t), cos(omega * t + phi)) + Vec2(v.y, -v.x) * H;
             datas[i].v += v;
-            datas[i].power += f.dot(v);
+            datas[i].power += v.dot(E * Vec2(cos(omega * t), cos(omega * t + phi)));
             particle.p += f;
             for (auto band: bands) {
-                if (band.acoustic_phonon_scattering(particle)) {
+                if (band.acoustic_phonon_scattering(particle, dt)) {
                     ++datas[i].acoustic_phonon_scattering_count;
                 }
-                if (band.optical_phonon_scattering(particle)) {
+                if (band.optical_phonon_scattering(particle, dt)) {
                     ++datas[i].optical_phonon_scattering_count;
                 }
             }

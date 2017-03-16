@@ -6,10 +6,10 @@ struct Vec2 {
     float y;
     Vec2(float _x, float _y): x(_x), y(_y) {};
     Vec2(): x(0), y(0) {};
-    float dot(Vec2 const & v) {
+    float dot(Vec2 const & v) const {
         return x * v.x + y * v.y;
     }
-    float len() {
+    float len() const {
         return sqrt(this->dot(*this));
     }
 };

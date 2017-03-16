@@ -1,5 +1,5 @@
 #pragma once
-#import <climits>
+#include <climits>
 /*
 * ## Random number generator
 *

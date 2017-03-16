@@ -19,7 +19,7 @@ def calculate(prefix, mode, Exc, Eyc, H, Ex, Ey, omega, phi, T, n, dt, alltime, 
     iteration += 1
     print("%d" % iteration)
     args = "%e %e %e %e %e %e %e %e %d %e %e\n" % (Exc, Eyc, H, Ex, Ey, omega, phi, T, n, dt, alltime)
-    out, err = Popen(["./scattering"], shell=True, stdin=PIPE, stdout=PIPE).communicate(input=args.encode("utf8"))
+    out, err = Popen(["flat.exe"], shell=True, stdin=PIPE, stdout=PIPE).communicate(input=args.encode("utf8"))
     data = out.decode("utf8")
     print(data)
     return {
@@ -41,8 +41,8 @@ def magnetic():
     phi     = 0
     T       = 300
     n       = 1000
-    dt      = 1e-13
-    alltime = 1e-8
+    dt      = 5e-14
+    alltime = 1e-9
     tau     = 3e-12
     # однозонное приближение
     one_band = [calculate("CVC1", "one_band", Exc, Eyc, H, Ex, Ey, omega, phi, T, n, dt, alltime, tau) for H in Hl]
@@ -86,11 +86,11 @@ def freq():
     omegal  = np.linspace(1e10, 10e11, 20)
     phi     = np.pi/2
     T       = 300
-    n       = 10
-    dt      = 1e-13
-    alltime = 1e-9
+    n       = 100
+    dt      = 5e-14
+    alltime = 1e-10
     tau     = 3e-12
-    for Exc in np.linspace(0, 2, 5):
+    for Exc in [0]: #np.linspace(0, 2, 5):
         # однозонное приближение
         one_band = [calculate("CVC1", "one_band", Exc, Eyc, H, Ex, Ey, omega, phi, T, n, dt, alltime, tau) for omega in omegal]
         # двухзонное
