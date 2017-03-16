@@ -1,4 +1,5 @@
 #pragma once
+#import <climits>
 /*
 * ## Random number generator
 *
@@ -12,7 +13,10 @@ struct Rng {
         y(362436069),
         z(521288629),
         w(88675123) {};
-
+    Rng() : x(0),
+        y(362436069),
+        z(521288629),
+        w(88675123) {};
     float uniform() {
         unsigned int t = x ^ (x << 1);
         x = y;

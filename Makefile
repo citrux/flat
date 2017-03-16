@@ -48,24 +48,13 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/citrux/Repositories/bilayer-graphene/new
+CMAKE_SOURCE_DIR = /home/citrux/Repositories/scattering
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/citrux/Repositories/bilayer-graphene/new
+CMAKE_BINARY_DIR = /home/citrux/Repositories/scattering
 
 #=============================================================================
 # Targets provided globally by CMake.
-
-# Special rule for the target edit_cache
-edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
-	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
-.PHONY : edit_cache
-
-# Special rule for the target edit_cache
-edit_cache/fast: edit_cache
-
-.PHONY : edit_cache/fast
 
 # Special rule for the target rebuild_cache
 rebuild_cache:
@@ -78,11 +67,22 @@ rebuild_cache/fast: rebuild_cache
 
 .PHONY : rebuild_cache/fast
 
+# Special rule for the target edit_cache
+edit_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
+	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+.PHONY : edit_cache
+
+# Special rule for the target edit_cache
+edit_cache/fast: edit_cache
+
+.PHONY : edit_cache/fast
+
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/citrux/Repositories/bilayer-graphene/new/CMakeFiles /home/citrux/Repositories/bilayer-graphene/new/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/citrux/Repositories/scattering/CMakeFiles /home/citrux/Repositories/scattering/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/citrux/Repositories/bilayer-graphene/new/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/citrux/Repositories/scattering/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -111,6 +111,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named scattering
+
+# Build rule for target.
+scattering: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 scattering
+.PHONY : scattering
+
+# fast build rule for target.
+scattering/fast:
+	$(MAKE) -f CMakeFiles/scattering.dir/build.make CMakeFiles/scattering.dir/build
+.PHONY : scattering/fast
+
+#=============================================================================
 # Target rules for targets named runTests
 
 # Build rule for target.
@@ -123,32 +136,86 @@ runTests/fast:
 	$(MAKE) -f CMakeFiles/runTests.dir/build.make CMakeFiles/runTests.dir/build
 .PHONY : runTests/fast
 
-vec2_test.o: vec2_test.cc.o
+src/main.o: src/main.cc.o
 
-.PHONY : vec2_test.o
+.PHONY : src/main.o
 
 # target to build an object file
-vec2_test.cc.o:
-	$(MAKE) -f CMakeFiles/runTests.dir/build.make CMakeFiles/runTests.dir/vec2_test.cc.o
-.PHONY : vec2_test.cc.o
+src/main.cc.o:
+	$(MAKE) -f CMakeFiles/scattering.dir/build.make CMakeFiles/scattering.dir/src/main.cc.o
+.PHONY : src/main.cc.o
 
-vec2_test.i: vec2_test.cc.i
+src/main.i: src/main.cc.i
 
-.PHONY : vec2_test.i
+.PHONY : src/main.i
 
 # target to preprocess a source file
-vec2_test.cc.i:
-	$(MAKE) -f CMakeFiles/runTests.dir/build.make CMakeFiles/runTests.dir/vec2_test.cc.i
-.PHONY : vec2_test.cc.i
+src/main.cc.i:
+	$(MAKE) -f CMakeFiles/scattering.dir/build.make CMakeFiles/scattering.dir/src/main.cc.i
+.PHONY : src/main.cc.i
 
-vec2_test.s: vec2_test.cc.s
+src/main.s: src/main.cc.s
 
-.PHONY : vec2_test.s
+.PHONY : src/main.s
 
 # target to generate assembly for a file
-vec2_test.cc.s:
-	$(MAKE) -f CMakeFiles/runTests.dir/build.make CMakeFiles/runTests.dir/vec2_test.cc.s
-.PHONY : vec2_test.cc.s
+src/main.cc.s:
+	$(MAKE) -f CMakeFiles/scattering.dir/build.make CMakeFiles/scattering.dir/src/main.cc.s
+.PHONY : src/main.cc.s
+
+src/material.o: src/material.cc.o
+
+.PHONY : src/material.o
+
+# target to build an object file
+src/material.cc.o:
+	$(MAKE) -f CMakeFiles/scattering.dir/build.make CMakeFiles/scattering.dir/src/material.cc.o
+.PHONY : src/material.cc.o
+
+src/material.i: src/material.cc.i
+
+.PHONY : src/material.i
+
+# target to preprocess a source file
+src/material.cc.i:
+	$(MAKE) -f CMakeFiles/scattering.dir/build.make CMakeFiles/scattering.dir/src/material.cc.i
+.PHONY : src/material.cc.i
+
+src/material.s: src/material.cc.s
+
+.PHONY : src/material.s
+
+# target to generate assembly for a file
+src/material.cc.s:
+	$(MAKE) -f CMakeFiles/scattering.dir/build.make CMakeFiles/scattering.dir/src/material.cc.s
+.PHONY : src/material.cc.s
+
+src/vec2_test.o: src/vec2_test.cc.o
+
+.PHONY : src/vec2_test.o
+
+# target to build an object file
+src/vec2_test.cc.o:
+	$(MAKE) -f CMakeFiles/runTests.dir/build.make CMakeFiles/runTests.dir/src/vec2_test.cc.o
+.PHONY : src/vec2_test.cc.o
+
+src/vec2_test.i: src/vec2_test.cc.i
+
+.PHONY : src/vec2_test.i
+
+# target to preprocess a source file
+src/vec2_test.cc.i:
+	$(MAKE) -f CMakeFiles/runTests.dir/build.make CMakeFiles/runTests.dir/src/vec2_test.cc.i
+.PHONY : src/vec2_test.cc.i
+
+src/vec2_test.s: src/vec2_test.cc.s
+
+.PHONY : src/vec2_test.s
+
+# target to generate assembly for a file
+src/vec2_test.cc.s:
+	$(MAKE) -f CMakeFiles/runTests.dir/build.make CMakeFiles/runTests.dir/src/vec2_test.cc.s
+.PHONY : src/vec2_test.cc.s
 
 # Help Target
 help:
@@ -156,12 +223,19 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
-	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... edit_cache"
+	@echo "... scattering"
 	@echo "... runTests"
-	@echo "... vec2_test.o"
-	@echo "... vec2_test.i"
-	@echo "... vec2_test.s"
+	@echo "... src/main.o"
+	@echo "... src/main.i"
+	@echo "... src/main.s"
+	@echo "... src/material.o"
+	@echo "... src/material.i"
+	@echo "... src/material.s"
+	@echo "... src/vec2_test.o"
+	@echo "... src/vec2_test.i"
+	@echo "... src/vec2_test.s"
 .PHONY : help
 
 

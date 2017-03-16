@@ -5,9 +5,13 @@ find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
 # Link runTests with what we want to test and the GTest and pthread library
-add_executable(runTests vec2_test.cc)
+add_executable(runTests src/vec2_test.cc)
 target_compile_features(runTests PRIVATE cxx_aggregate_default_initializers)
 target_link_libraries(runTests ${GTEST_LIBRARIES} pthread)
 
-add_executable(scattering main.cc material.cc)
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+add_executable(scattering src/main.cc src/material.cc)
 target_compile_features(scattering PRIVATE cxx_aggregate_default_initializers)
