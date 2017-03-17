@@ -17,29 +17,32 @@ void Particle::reset_r() {
 
 void Particle::isotropic_scattering(float momentum) {
     float theta = 2 * M_PI * rng.uniform();
-    p = {momentum * cos(theta), momentum * sin(theta)};
+    float prob = rng.uniform();
+    while ((std::cos(theta) + 1) / 2 < prob) {
+        theta = 2 * M_PI * rng.uniform();
+        prob = rng.uniform();
+    }
+    float psi = atan2(p.y, p.x); 
+    p = {momentum * std::cos(psi + theta), momentum * std::sin(psi + theta)};
 }
 /*
  * Band
  */
-Band::Band() {
+Band::Band(float temperature) {
     const float rho = 2 * 7.7e-8;
     const float Dak = 18;
     const float Dopt = 1.4e9;
-    gamma = 0.35;
-    delta = 0.001;
 
-    const float T = 300;
+    const float T = temperature;
     
-    optical_phonon_energy = 0.196;
     acoustic_phonon_constant = sqr(k * T * Dak) * eV / (2 * hbar *
             rho * sqr(v_s * v_f) * hbar * hbar);
     optical_phonon_constant = k * T * sqr(Dopt) * eV / (4 * hbar *
             optical_phonon_energy * rho * sqr(v_f));
 
-    float max_momentum = 5;
-    float max_energy = energy(max_momentum);
-    float min_energy = gamma * delta / sqrt(gamma * gamma + 4 * delta * delta);
+    const float max_momentum = 5;
+    const float max_energy = energy(max_momentum);
+    const float min_energy = gamma * delta / std::sqrt(gamma * gamma + 4 * delta * delta);
     
     energy_samples = 1000;
     momentum_samples = 1000;
@@ -66,30 +69,6 @@ Band::Band() {
             }
         }
     }
-}
-
-float Band::energy(float momentum) {
-    float delta2 = delta * delta;
-    float gamma2 = gamma * gamma;
-    float gamma4 = gamma2 * gamma2;
-    float p2 = momentum * momentum;
-    return sqrt(delta2 + gamma2 / 2 + p2 - sqrt(gamma4 / 4 + (gamma2 + 4 * delta2) * p2));
-}
-
-float Band::energy(Vec2 const & momentum) {
-    return energy(momentum.len());
-}
-
-float Band::velocity(float momentum) {
-    return velocity(Vec2(momentum, 0)).x;
-}
-
-Vec2 Band::velocity(Vec2 const & momentum) {
-    float delta2 = delta * delta;
-    float gamma2 = gamma * gamma;
-    float gamma4 = gamma2 * gamma2;
-    float p2 = momentum.dot(momentum);
-    return momentum * (1 - 0.5 * (gamma2 + 4 * delta2) / sqrt(gamma4 / 4 + (gamma2 + 4 * delta2) * p2)) / energy(momentum);
 }
 
 bool Band::acoustic_phonon_scattering(Particle & p, float dt) {

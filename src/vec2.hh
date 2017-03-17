@@ -10,7 +10,7 @@ struct Vec2 {
         return x * v.x + y * v.y;
     }
     float len() const {
-        return sqrt(this->dot(*this));
+        return std::sqrt(this->dot(*this));
     }
 };
 

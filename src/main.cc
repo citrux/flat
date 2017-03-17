@@ -7,7 +7,7 @@
 #include "stats.hh"
 
 int test_prob() {
-    auto band = new Band();
+    auto band = new Band(300);
     const auto table = band->table;
     for (auto entry: table) {
         float e = entry.energy;
@@ -59,13 +59,22 @@ int main(int argc, char const *argv[])
     for (int i = 0; i < n; ++i) {
         seeds[i] = rand();
     }
-    const Band lower = Band();
+    const Band lower = Band(T);
     std::vector<Band> bands = {lower};
     #pragma omp parallel for
     for (int i = 0; i < n; ++i) {
         Particle particle(seeds[i]);
         particle.band = &bands[0];
         particle.p = {0, 0};
+        float p = 0;
+        float r1, r2;
+        do {
+            r1 = particle.rng.uniform();
+            r2 = particle.rng.uniform();
+            p = -log(r1);
+        } while (exp(- (particle.band->energy(p) - particle.band->min_energy()) / k / T) < r2);
+        float theta = 2 * M_PI * particle.rng.uniform();
+        particle.p = {p * std::cos(theta), p * std::sin(theta)};
         for (int t = 0; t < s; ++t) {
             Vec2 v = particle.band->velocity(particle.p);
             Vec2 f = Ec + E * Vec2(cos(omega * t), cos(omega * t + phi)) + Vec2(v.y, -v.x) * H;
