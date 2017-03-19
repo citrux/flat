@@ -59,8 +59,9 @@ int main(int argc, char const *argv[])
     for (int i = 0; i < n; ++i) {
         seeds[i] = rand();
     }
-    const Band lower = Band(T);
+    Band lower = Band(T);
     std::vector<Band> bands = {lower};
+    puts("start calculation");
     #pragma omp parallel for
     for (int i = 0; i < n; ++i) {
         Particle particle(seeds[i]);
@@ -81,7 +82,7 @@ int main(int argc, char const *argv[])
             datas[i].v += v;
             datas[i].power += v.dot(E * Vec2(cos(omega * t), cos(omega * t + phi)));
             particle.p += f;
-            for (auto band: bands) {
+            for (auto & band: bands) {
                 if (band.acoustic_phonon_scattering(particle, dt)) {
                     ++datas[i].acoustic_phonon_scattering_count;
                 }

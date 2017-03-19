@@ -42,34 +42,15 @@ struct Band {
     int momentum_samples;
     float momentum_precision;
 
-    inline float min_energy() const {
-        return delta * gamma / std::sqrt(gamma * gamma + 4 * delta * delta);
-        }
+    float min_energy() const;
 
-    inline float energy(float momentum) const {
-        const float delta2 = delta * delta;
-        const float gamma2 = gamma * gamma;
-        const float gamma4 = gamma2 * gamma2;
-        const float p2 = momentum * momentum;
-        return std::sqrt(delta2 + gamma2 / 2 + p2 - std::sqrt(gamma4 / 4 + (gamma2 + 4 * delta2) * p2));
-    }
+    float energy(float momentum) const;
 
-    inline float energy(Vec2 const & momentum) const {
-        return energy(momentum.len());
-    }
+    float energy(Vec2 const & momentum) const;
 
-    inline float velocity(float momentum) const {
-        return velocity(Vec2(momentum, 0)).x;
-    }
+    float velocity(float momentum) const;
 
-    inline Vec2 velocity(Vec2 const & momentum) const {
-        const float delta2 = delta * delta;
-        const float gamma2 = gamma * gamma;
-        const float gamma4 = gamma2 * gamma2;
-        const float p2 = momentum.dot(momentum);
-        return momentum * (1 - 0.5 * (gamma2 + 4 * delta2) / std::sqrt(gamma4 / 4 + (gamma2 + 4 * delta2) * p2)) / energy(momentum);
-    }
-
+    Vec2 velocity(Vec2 const & momentum) const;
 
     bool acoustic_phonon_scattering(Particle & p, float dt);
     bool optical_phonon_scattering(Particle & p, float dt);

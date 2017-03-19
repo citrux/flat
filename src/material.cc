@@ -45,7 +45,7 @@ Band::Band(float temperature) {
     const float min_energy = gamma * delta / std::sqrt(gamma * gamma + 4 * delta * delta);
     
     energy_samples = 1000;
-    momentum_samples = 1000;
+    momentum_samples = 100;
     momentum_precision = 1e-5;
     
     table = std::vector<BandScatteringEntry>(energy_samples);
@@ -71,11 +71,39 @@ Band::Band(float temperature) {
     }
 }
 
+float Band::min_energy() const {
+    return delta * gamma / std::sqrt(gamma * gamma + 4 * delta * delta);
+}
+
+float Band::energy(float momentum) const {
+    const float delta2 = delta * delta;
+    const float gamma2 = gamma * gamma;
+    const float gamma4 = gamma2 * gamma2;
+    const float p2 = momentum * momentum;
+    return std::sqrt(delta2 + gamma2 / 2 + p2 - std::sqrt(gamma4 / 4 + (gamma2 + 4 * delta2) * p2));
+}
+
+float Band::energy(Vec2 const & momentum) const {
+    return energy(momentum.len());
+}
+
+float Band::velocity(float momentum) const {
+    return velocity(Vec2(momentum, 0)).x;
+}
+
+Vec2 Band::velocity(Vec2 const & momentum) const {
+    const float delta2 = delta * delta;
+    const float gamma2 = gamma * gamma;
+    const float gamma4 = gamma2 * gamma2;
+    const float p2 = momentum.dot(momentum);
+    return momentum * (1 - 0.5 * (gamma2 + 4 * delta2) / std::sqrt(gamma4 / 4 + (gamma2 + 4 * delta2) * p2)) / energy(momentum);
+}
+
 bool Band::acoustic_phonon_scattering(Particle & p, float dt) {
     float e = energy(p.p);
     int i = (e - table[0].energy) / (table[1].energy - table[0].energy);
     if (i >= 0 && i < energy_samples) {
-        for (auto x: table[i].integrals) {
+        for (auto const & x: table[i].integrals) {
             p.r -= acoustic_phonon_constant * x.integral * dt;
             if (p.r < 0) {
                 p.isotropic_scattering(x.momentum);
@@ -92,7 +120,7 @@ bool Band::optical_phonon_scattering(Particle & p, float dt) {
     float e = energy(p.p) - optical_phonon_energy;
     int i = (e - table[0].energy) / (table[1].energy - table[0].energy);
     if (i >= 0 && i < energy_samples) {
-        for (auto x: table[i].integrals) {
+        for (auto const & x: table[i].integrals) {
             p.r -= optical_phonon_constant * x.integral * dt;
             if (p.r < 0) {
                 p.isotropic_scattering(x.momentum);
