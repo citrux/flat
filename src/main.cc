@@ -29,6 +29,21 @@ int test_prob() {
     return 0;
 }
 
+int test_rates() {
+    Particle p(0);
+    auto band = BigrapheneLower(300);
+    for (float a = 0; a < 8; a += 1e-3) {
+        p.p = {a, 0};
+        float wa = 0, wo = 0;
+        for (auto & result: band.acoustic_phonon_scattering(p))
+            wa += result.rate;
+        for (auto & result: band.optical_phonon_scattering(p))
+            wo += result.rate;
+        printf("%e %e %e %e\n", a, band.energy(a), wa, wo);
+    }
+    return 0;
+}
+
 int main(int argc, char const *argv[])
 {
     Vec2 E, Ec;
@@ -88,7 +103,7 @@ int main(int argc, char const *argv[])
             datas[i].power += v.dot(E * Vec2(cos(omega * t), cos(omega * t + phi)));
             particle.p += f;
             float wsum = 0;
-            for (auto & band: bands) {
+            for (auto band: bands) {
                 for (auto & result: band->acoustic_phonon_scattering(particle))
                     wsum += result.rate;
                 for (auto & result: band->optical_phonon_scattering(particle))
@@ -97,7 +112,7 @@ int main(int argc, char const *argv[])
             particle.r -= wsum * dt;
             if (particle.r < 0) {
                 float w = particle.rng.uniform() * wsum;
-                for (auto & band: bands) {       
+                for (auto band: bands) {       
                     for (auto & result: band->acoustic_phonon_scattering(particle)) {
                         w -= result.rate;
                         if (w < 0) {

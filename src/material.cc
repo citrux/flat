@@ -14,6 +14,19 @@ Vec2 momentum_scattering(float momentum, Particle & particle) {
     return {momentum * std::cos(psi + theta), momentum * std::sin(psi + theta)};
 }
 
+template <typename T>
+float bisection(T f, float xmin, float xmax, float precision) {
+    while (xmax - xmin > precision) {
+        float x = (xmax + xmin) / 2;
+        if (f(x) * f(xmin) <= 0) {
+            xmax = x;
+        } else {
+            xmin = x;
+        }
+    }
+    return (xmax + xmin) / 2;
+}
+
 /*
  * Particle
  */
@@ -41,33 +54,25 @@ BigrapheneLower::BigrapheneLower(float temperature) {
     optical_phonon_constant = k * T * sqr(Dopt) * eV / (4 * hbar *
             optical_phonon_energy * rho * sqr(v_f));
 
-    const float max_momentum = 5;
+    const float max_momentum = 2;
+    const float crit_momentum = delta * std::sqrt(2 - 4 * delta * delta / (gamma * gamma + 4 * delta * delta));
     const float max_energy = energy(max_momentum);
     const float min_energy = gamma * delta / std::sqrt(gamma * gamma + 4 * delta * delta);
     
-    energy_samples = 1000;
-    momentum_samples = 1000;
+    energy_samples = 10000;
     momentum_precision = 1e-5;
     
     table = std::vector<BandScatteringEntry>(energy_samples);
     for (int i = 0; i < energy_samples; ++i) {
         float e = (min_energy * (energy_samples - 1 - i) + max_energy * i) / (energy_samples - 1);
         table[i].energy = e;
-        for (int j = 0; j < momentum_samples - 1; ++j) {
-            float p1 = j * max_momentum / (momentum_samples - 1);
-            float p2 = (j + 1) * max_momentum / (momentum_samples - 1);
-            float p = p = (p1 + p2) / 2;
-            if ((energy(p1) - e) * (energy(p2) - e) <= 0) {
-                while (p2 - p1 > momentum_precision) {
-                    p = (p1 + p2) / 2;
-                    if ((energy(p1) - e) * (energy(p) - e) <= 0) {
-                        p2 = p;
-                    } else {
-                        p1 = p;
-                    }
-                } 
-                table[i].integrals.push_back({p, 2 * M_PI * p / std::abs(velocity(p))});
-            }
+        if (e < delta) {
+            float p = bisection([this,e](float p){return energy(p) - e;}, 0, crit_momentum, momentum_precision);
+            table[i].integrals.push_back({p, 2 * M_PI * p / std::abs(velocity(p))});
+        }
+        if (e < max_energy) {
+            float p = bisection([this,e](float p){return energy(p) - e;}, crit_momentum, max_momentum, momentum_precision);
+            table[i].integrals.push_back({p, 2 * M_PI * p / std::abs(velocity(p))});
         }
     }
 }
@@ -109,6 +114,10 @@ std::list<ScatteringResult> BigrapheneLower::acoustic_phonon_scattering(Particle
             result.push_back({momentum_scattering(x.momentum, p), acoustic_phonon_constant * x.integral});
         }
     }
+    if (i >= energy_samples-1) {
+        float momentum = e + .5 * std::sqrt(gamma * gamma + 4 * delta * delta);
+        result.push_back({momentum_scattering(momentum, p), acoustic_phonon_constant * 2 * M_PI * momentum});
+    }
     return result;
 }
 
@@ -118,8 +127,12 @@ std::list<ScatteringResult> BigrapheneLower::optical_phonon_scattering(Particle 
     std::list<ScatteringResult> result;
     if (i >= 0 && i < energy_samples) {
         for (auto const & x: table[i].integrals) {
-            result.push_back({momentum_scattering(x.momentum, p), acoustic_phonon_constant * x.integral});
+            result.push_back({momentum_scattering(x.momentum, p), optical_phonon_constant * x.integral});
         }
+    }
+    if (i >= energy_samples-1) {
+        float momentum = e + .5 * std::sqrt(gamma * gamma + 4 * delta * delta);
+        result.push_back({momentum_scattering(momentum, p), optical_phonon_constant * 2 * M_PI * momentum});
     }
     return result;
 }
