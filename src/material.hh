@@ -14,7 +14,6 @@ struct Particle {
     Rng rng;
     Band *band;
     void reset_r();
-    void isotropic_scattering(float momentum);
     Particle(unsigned int seed);
 };
 
@@ -28,7 +27,24 @@ struct BandScatteringEntry {
     std::list<BandScatteringIntegral> integrals;
 };
 
-struct Band {
+struct ScatteringResult {
+    Vec2 p;
+    float rate;
+};
+
+class Band {
+public:
+    virtual float min_energy() const = 0;
+    virtual float energy(float momentum) const = 0;
+    virtual float energy(Vec2 const & momentum) const = 0;
+    virtual float velocity(float momentum) const = 0;
+    virtual Vec2 velocity(Vec2 const & momentum) const = 0;
+    virtual std::list<ScatteringResult> acoustic_phonon_scattering(Particle & p) = 0;
+    virtual std::list<ScatteringResult> optical_phonon_scattering(Particle & p) = 0;
+};
+
+class BigrapheneLower : public Band {
+public:
     const float gamma = 0.35;
     const float delta =  0.1;
 
@@ -36,25 +52,19 @@ struct Band {
     float acoustic_phonon_constant;
     float optical_phonon_constant;
     
-
     std::vector<BandScatteringEntry> table;
     int energy_samples;
     int momentum_samples;
     float momentum_precision;
 
     float min_energy() const;
-
     float energy(float momentum) const;
-
     float energy(Vec2 const & momentum) const;
-
     float velocity(float momentum) const;
-
     Vec2 velocity(Vec2 const & momentum) const;
+    std::list<ScatteringResult> acoustic_phonon_scattering(Particle & p);
+    std::list<ScatteringResult> optical_phonon_scattering(Particle & p);
 
-    bool acoustic_phonon_scattering(Particle & p, float dt);
-    bool optical_phonon_scattering(Particle & p, float dt);
-
-    Band(float temperature);
-    ~Band() {};
+    BigrapheneLower(float temperature);
+    ~BigrapheneLower() {};
 };

@@ -3,6 +3,17 @@
 #include "physics.hh"
 #include <cstdio>
 
+Vec2 momentum_scattering(float momentum, Particle & particle) {
+    float theta = 2 * M_PI * particle.rng.uniform();
+    float prob = particle.rng.uniform();
+    while ((std::cos(theta) + 1) / 2 < prob) {
+        theta = 2 * M_PI * particle.rng.uniform();
+        prob = particle.rng.uniform();
+    }
+    float psi = atan2(particle.p.y, particle.p.x); 
+    return {momentum * std::cos(psi + theta), momentum * std::sin(psi + theta)};
+}
+
 /*
  * Particle
  */
@@ -15,20 +26,10 @@ void Particle::reset_r() {
     r = -log(rng.uniform());
 }
 
-void Particle::isotropic_scattering(float momentum) {
-    float theta = 2 * M_PI * rng.uniform();
-    float prob = rng.uniform();
-    while ((std::cos(theta) + 1) / 2 < prob) {
-        theta = 2 * M_PI * rng.uniform();
-        prob = rng.uniform();
-    }
-    float psi = atan2(p.y, p.x); 
-    p = {momentum * std::cos(psi + theta), momentum * std::sin(psi + theta)};
-}
 /*
- * Band
+ * BigrapheneLower
  */
-Band::Band(float temperature) {
+BigrapheneLower::BigrapheneLower(float temperature) {
     const float rho = 2 * 7.7e-8;
     const float Dak = 18;
     const float Dopt = 1.4e9;
@@ -45,7 +46,7 @@ Band::Band(float temperature) {
     const float min_energy = gamma * delta / std::sqrt(gamma * gamma + 4 * delta * delta);
     
     energy_samples = 1000;
-    momentum_samples = 100;
+    momentum_samples = 1000;
     momentum_precision = 1e-5;
     
     table = std::vector<BandScatteringEntry>(energy_samples);
@@ -71,11 +72,11 @@ Band::Band(float temperature) {
     }
 }
 
-float Band::min_energy() const {
+float BigrapheneLower::min_energy() const {
     return delta * gamma / std::sqrt(gamma * gamma + 4 * delta * delta);
 }
 
-float Band::energy(float momentum) const {
+float BigrapheneLower::energy(float momentum) const {
     const float delta2 = delta * delta;
     const float gamma2 = gamma * gamma;
     const float gamma4 = gamma2 * gamma2;
@@ -83,15 +84,15 @@ float Band::energy(float momentum) const {
     return std::sqrt(delta2 + gamma2 / 2 + p2 - std::sqrt(gamma4 / 4 + (gamma2 + 4 * delta2) * p2));
 }
 
-float Band::energy(Vec2 const & momentum) const {
+float BigrapheneLower::energy(Vec2 const & momentum) const {
     return energy(momentum.len());
 }
 
-float Band::velocity(float momentum) const {
+float BigrapheneLower::velocity(float momentum) const {
     return velocity(Vec2(momentum, 0)).x;
 }
 
-Vec2 Band::velocity(Vec2 const & momentum) const {
+Vec2 BigrapheneLower::velocity(Vec2 const & momentum) const {
     const float delta2 = delta * delta;
     const float gamma2 = gamma * gamma;
     const float gamma4 = gamma2 * gamma2;
@@ -99,36 +100,26 @@ Vec2 Band::velocity(Vec2 const & momentum) const {
     return momentum * (1 - 0.5 * (gamma2 + 4 * delta2) / std::sqrt(gamma4 / 4 + (gamma2 + 4 * delta2) * p2)) / energy(momentum);
 }
 
-bool Band::acoustic_phonon_scattering(Particle & p, float dt) {
+std::list<ScatteringResult> BigrapheneLower::acoustic_phonon_scattering(Particle & p) {
     float e = energy(p.p);
     int i = (e - table[0].energy) / (table[1].energy - table[0].energy);
+    std::list<ScatteringResult> result;
     if (i >= 0 && i < energy_samples) {
         for (auto const & x: table[i].integrals) {
-            p.r -= acoustic_phonon_constant * x.integral * dt;
-            if (p.r < 0) {
-                p.isotropic_scattering(x.momentum);
-                p.reset_r();
-                p.band = this;
-                return true;
-            }
+            result.push_back({momentum_scattering(x.momentum, p), acoustic_phonon_constant * x.integral});
         }
     }
-    return false;
+    return result;
 }
 
-bool Band::optical_phonon_scattering(Particle & p, float dt) {
+std::list<ScatteringResult> BigrapheneLower::optical_phonon_scattering(Particle & p) {
     float e = energy(p.p) - optical_phonon_energy;
     int i = (e - table[0].energy) / (table[1].energy - table[0].energy);
+    std::list<ScatteringResult> result;
     if (i >= 0 && i < energy_samples) {
         for (auto const & x: table[i].integrals) {
-            p.r -= optical_phonon_constant * x.integral * dt;
-            if (p.r < 0) {
-                p.isotropic_scattering(x.momentum);
-                p.reset_r();
-                p.band = this;
-                return true;
-            }
+            result.push_back({momentum_scattering(x.momentum, p), acoustic_phonon_constant * x.integral});
         }
     }
-    return false;
+    return result;
 }

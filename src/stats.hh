@@ -65,11 +65,11 @@ inline Data sqrt(Data d) {
     d.optical_phonon_scattering_count = (d.optical_phonon_scattering_count > 0) ? sqrt(d.optical_phonon_scattering_count) : 0;
     return d;
 }
+
 inline Data operator+(Data lhs, Data const & rhs) {return lhs += rhs;}
 inline Data operator-(Data lhs, Data const & rhs) {return lhs -= rhs;}
 inline Data operator*(Data lhs, Data const & rhs) {return lhs *= rhs;}
 inline Data operator/(Data lhs, int rhs) {return lhs /= rhs;}
-
 
 template <typename T>
 inline T mean(std::vector<T> const & values) {
