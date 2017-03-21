@@ -1,6 +1,7 @@
 #include "vec2.hh"
 /*
 * ## Structure for results
+* TODO: find better name for it
 */
 struct Data
 {
@@ -12,7 +13,7 @@ struct Data
     int optical_phonon_scattering_count;
 
     float tau;
-    
+
     Data() : v(Vec2(0, 0)),
         power(0),
         tau(0),
@@ -48,7 +49,18 @@ inline Data & operator*=(Data & lhs, const Data & rhs) {
     return lhs;
 }
 
-inline Data & operator/=(Data & lhs, int rhs) {
+template <typename T>
+inline Data & operator*=(Data & lhs, T rhs) {
+    lhs.v *= rhs;
+    lhs.tau *= rhs;
+    lhs.power *= rhs;
+    lhs.acoustic_phonon_scattering_count *= rhs;
+    lhs.optical_phonon_scattering_count *= rhs;
+    return lhs;
+}
+
+template <typename T>
+inline Data & operator/=(Data & lhs, T rhs) {
     lhs.v /= rhs;
     lhs.tau /= rhs;
     lhs.power /= rhs;
@@ -68,8 +80,10 @@ inline Data sqrt(Data d) {
 
 inline Data operator+(Data lhs, Data const & rhs) {return lhs += rhs;}
 inline Data operator-(Data lhs, Data const & rhs) {return lhs -= rhs;}
-inline Data operator*(Data lhs, Data const & rhs) {return lhs *= rhs;}
-inline Data operator/(Data lhs, int rhs) {return lhs /= rhs;}
+template <typename T>
+inline Data operator*(Data lhs, T rhs) {return lhs *= rhs;}
+template <typename T>
+inline Data operator/(Data lhs, T rhs) {return lhs /= rhs;}
 
 template <typename T>
 inline T mean(std::vector<T> const & values) {

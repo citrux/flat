@@ -6,50 +6,14 @@
 #include "material.hh"
 #include "stats.hh"
 
-int test_prob() {
-    auto band = new BigrapheneLower(300);
-    const auto table = band->table;
-    for (auto entry: table) {
-        float e = entry.energy;
-        float e1 = e - band->optical_phonon_energy;
-        float ac_prob = 0;
-        for (auto i: entry.integrals) {
-            ac_prob += band->acoustic_phonon_constant * i.integral;
-        }
-        float op_prob = 0;
-        int i = (e1 - table[0].energy) / (table[1].energy - table[0].energy);
-        if (i >= 0) {
-            auto entry1 = table[i];
-            for (auto j: entry1.integrals) {
-                op_prob += band->optical_phonon_constant * j.integral;
-            }
-        }
-        printf("%e %e %e %e\n", e, ac_prob, op_prob, ac_prob + op_prob);
-    }
-    return 0;
-}
-
-int test_rates() {
-    Particle p(0);
-    auto band = BigrapheneLower(300);
-    for (float a = 0; a < 8; a += 1e-3) {
-        p.p = {a, 0};
-        float wa = 0, wo = 0;
-        for (auto & result: band.acoustic_phonon_scattering(p))
-            wa += result.rate;
-        for (auto & result: band.optical_phonon_scattering(p))
-            wo += result.rate;
-        printf("%e %e %e %e\n", a, band.energy(a), wa, wo);
-    }
-    return 0;
-}
-
 int main(int argc, char const *argv[])
 {
     Vec2 E, Ec;
     float H, omega, phi, T;
     int n;
     float dt, all_time;
+
+    /* input */
     std::cin >> Ec.x >> Ec.y;
     std::cin >> H;
     std::cin >> E.x >> E.y;
@@ -71,7 +35,6 @@ int main(int argc, char const *argv[])
     H *= v_f / c * field_dimensionless_factor;
     omega *= dt;
 
-    int s = all_time / dt + 1;
 
     std::vector<Data> datas(n);
     std::vector<unsigned int> seeds(n);
@@ -87,15 +50,17 @@ int main(int argc, char const *argv[])
         Particle particle(seeds[i]);
         particle.band = bands[0];
         particle.p = {0, 0};
-        float p = 0;
-        float r1, r2;
+        /* Boltzmann-distributed initial condition */
+        float prob;
         do {
-            r1 = particle.rng.uniform();
-            r2 = particle.rng.uniform();
-            p = -log(r1);
-        } while (exp(- (particle.band->energy(p) - particle.band->min_energy()) / k / T) < r2);
-        float theta = 2 * M_PI * particle.rng.uniform();
-        particle.p = {p * std::cos(theta), p * std::sin(theta)};
+            float p = particle.rng.uniform();
+            prob = particle.rng.uniform();
+            float theta = 2 * pi * particle.rng.uniform();
+            particle.p = {p * std::cos(theta), p * std::sin(theta)};
+        } while (exp(-(particle.band->energy(particle.p) - particle.band->min_energy()) / k / T) < prob);
+
+        /* simulation */
+        int s = all_time / dt + 1;
         for (int t = 0; t < s; ++t) {
             Vec2 v = particle.band->velocity(particle.p);
             Vec2 f = Ec + E * Vec2(cos(omega * t), cos(omega * t + phi)) + Vec2(v.y, -v.x) * H;
@@ -103,17 +68,17 @@ int main(int argc, char const *argv[])
             datas[i].power += v.dot(E * Vec2(cos(omega * t), cos(omega * t + phi)));
             particle.p += f;
             float wsum = 0;
-            for (auto band: bands) {
-                for (auto & result: band->acoustic_phonon_scattering(particle))
+            for (auto const band: bands) {
+                for (auto const & result: band->acoustic_phonon_scattering(particle))
                     wsum += result.rate;
-                for (auto & result: band->optical_phonon_scattering(particle))
+                for (auto const & result: band->optical_phonon_scattering(particle))
                     wsum += result.rate;
             }
             particle.r -= wsum * dt;
             if (particle.r < 0) {
                 float w = particle.rng.uniform() * wsum;
-                for (auto band: bands) {       
-                    for (auto & result: band->acoustic_phonon_scattering(particle)) {
+                for (auto const band: bands) {
+                    for (auto const & result: band->acoustic_phonon_scattering(particle)) {
                         w -= result.rate;
                         if (w < 0) {
                             ++datas[i].acoustic_phonon_scattering_count;
@@ -122,7 +87,7 @@ int main(int argc, char const *argv[])
                             goto end;
                         }
                     }
-                    for (auto & result: band->optical_phonon_scattering(particle)) {
+                    for (auto const & result: band->optical_phonon_scattering(particle)) {
                         w -= result.rate;
                         if (w < 0) {
                             ++datas[i].optical_phonon_scattering_count;
@@ -140,9 +105,12 @@ int main(int argc, char const *argv[])
         datas[i].power /= s;
         datas[i].tau = all_time / (datas[i].acoustic_phonon_scattering_count + datas[i].optical_phonon_scattering_count + 1);
     }
+    /* statistics */
     float student_coeff = 3;
     Data m = mean(datas);
-    Data sd = stdev(datas);
+    Data sd = stdev(datas) / std::sqrt(n) * student_coeff;
+
+    /* output (stdout) */
     printf("v_x = %e +/- %e\n", m.v.x, sd.v.x);
     printf("v_y = %e +/- %e\n", m.v.y, sd.v.y);
     printf("power = %e +/- %e\n", m.power, sd.power);

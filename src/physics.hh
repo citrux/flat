@@ -1,10 +1,6 @@
 #pragma once
 #include <cmath>
 
-#ifndef M_PI
-#define M_PI 3.1415926
-#endif // !M_PI
-
 /*
 * ## Physical (CGS with eV) and mathematical constants
 */

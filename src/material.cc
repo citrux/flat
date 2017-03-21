@@ -4,10 +4,10 @@
 #include <cstdio>
 
 Vec2 momentum_scattering(float momentum, Particle & particle) {
-    float theta = 2 * M_PI * particle.rng.uniform();
+    float theta = 2 * pi * particle.rng.uniform();
     float prob = particle.rng.uniform();
     while ((std::cos(theta) + 1) / 2 < prob) {
-        theta = 2 * M_PI * particle.rng.uniform();
+        theta = 2 * pi * particle.rng.uniform();
         prob = particle.rng.uniform();
     }
     float psi = atan2(particle.p.y, particle.p.x); 
@@ -68,11 +68,11 @@ BigrapheneLower::BigrapheneLower(float temperature) {
         table[i].energy = e;
         if (e < delta) {
             float p = bisection([this,e](float p){return energy(p) - e;}, 0, crit_momentum, momentum_precision);
-            table[i].integrals.push_back({p, 2 * M_PI * p / std::abs(velocity(p))});
+            table[i].integrals.push_back({p, 2 * pi * p / std::abs(velocity(p))});
         }
         if (e < max_energy) {
             float p = bisection([this,e](float p){return energy(p) - e;}, crit_momentum, max_momentum, momentum_precision);
-            table[i].integrals.push_back({p, 2 * M_PI * p / std::abs(velocity(p))});
+            table[i].integrals.push_back({p, 2 * pi * p / std::abs(velocity(p))});
         }
     }
 }
@@ -116,7 +116,7 @@ std::list<ScatteringResult> BigrapheneLower::acoustic_phonon_scattering(Particle
     }
     if (i >= energy_samples-1) {
         float momentum = e + .5 * std::sqrt(gamma * gamma + 4 * delta * delta);
-        result.push_back({momentum_scattering(momentum, p), acoustic_phonon_constant * 2 * M_PI * momentum});
+        result.push_back({momentum_scattering(momentum, p), acoustic_phonon_constant * 2 * pi * momentum});
     }
     return result;
 }
@@ -132,7 +132,7 @@ std::list<ScatteringResult> BigrapheneLower::optical_phonon_scattering(Particle 
     }
     if (i >= energy_samples-1) {
         float momentum = e + .5 * std::sqrt(gamma * gamma + 4 * delta * delta);
-        result.push_back({momentum_scattering(momentum, p), optical_phonon_constant * 2 * M_PI * momentum});
+        result.push_back({momentum_scattering(momentum, p), optical_phonon_constant * 2 * pi * momentum});
     }
     return result;
 }
