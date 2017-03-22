@@ -38,17 +38,17 @@ def calculate(prefix, mode, Exc, Eyc, H, Ex, Ey, omega, phi, T, n, dt, alltime, 
 def cvc():
     Exc     = 0
     Eyc     = 0
-    H       = -1
+    H       = 0
     Ex      = 0
     Ey      = 0
     omega   = 0
     phi     = 0
     T       = 300
-    n       = 100
-    dt      = 1e-13
-    alltime = 1e-8
+    n       = 400
+    dt      = 5e-14
+    alltime = 4e-9
     tau     = 3e-12
-    Excl = np.linspace(0, 0.02, 21)
+    Excl = np.linspace(0, 1, 21)
     one = [calculate("CVC1", "one_band", Exc, Eyc, H, Ex, Ey, omega, phi, T, n, dt, alltime, tau) for Exc in Excl]
     vx = np.array([x["v_x"] for x in one])
     vy = np.array([x["v_y"] for x in one])

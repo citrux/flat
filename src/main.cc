@@ -84,6 +84,7 @@ int main(int argc, char const *argv[])
                             ++datas[i].acoustic_phonon_scattering_count;
                             particle.reset_r();
                             particle.band = band;
+							particle.p = result.p;
                             goto end;
                         }
                     }
@@ -93,6 +94,7 @@ int main(int argc, char const *argv[])
                             ++datas[i].optical_phonon_scattering_count;
                             particle.reset_r();
                             particle.band = band;
+							particle.p = result.p;
                             goto end;
                         }
                     }
@@ -108,7 +110,7 @@ int main(int argc, char const *argv[])
     /* statistics */
     float student_coeff = 3;
     Data m = mean(datas);
-    Data sd = stdev(datas) / std::sqrt(n) * student_coeff;
+    Data sd = stdev(datas) / (float)std::sqrt(n) * student_coeff;
 
     /* output (stdout) */
     printf("v_x = %e +/- %e\n", m.v.x, sd.v.x);
