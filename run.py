@@ -44,7 +44,7 @@ def cvc():
     omega   = 0
     phi     = 0
     T       = 300
-    n       = 400
+    n       = 16
     dt      = 5e-14
     alltime = 4e-9
     tau     = 3e-12
@@ -57,7 +57,7 @@ def cvc():
     plt.show()
 
 def freq():
-    Exc     = 0
+    Exc     = 1
     Eyc     = 0
     H       = 0
     Ex      = 0.3
@@ -69,30 +69,32 @@ def freq():
     dt      = 1e-13
     alltime = 1e-8
     tau     = 3e-12
-    for Exc in [0]: #np.linspace(0, 2, 5):
-        # однозонное приближение
-        one = [calculate("CVC1", "one_band", Exc, Eyc, H, Ex, Ey, omega, phi, T, n, dt, alltime, tau) for omega in omegal]
-        two = [calculate("CVC1", "one_band", Exc, Eyc, 500, Ex, Ey, omega, phi, T, n, dt, alltime, tau) for omega in omegal]
-        # двухзонное
-        # two_bands = [calculate("CVC2", "two_bands", Exc, Eyc, H, Ex, Ey, omega, phi, T, n, dt, alltime, tau) for omega in omegal]
-        #print(one_band)
-        #print(two_bands)
-        power1 = np.array([x["power"] for x in one])
-        power2 = np.array([x["power"] for x in two])
-        # power2 = np.array([x["power"] for x in two_bands]) * 10e12 * 1.6e-19 / dt
-        # tau1 = np.array([x["tau"] for x in one_band])
-        # tau2 = np.array([x["tau"] for x in two_bands])
-        # lower = np.array([x["lower_band"] for x in two_bands])
-        # upper = np.array([x["upper_band"] for x in two_bands])
-        # plt.errorbar(omegal, power1[:,0], yerr=power1[:,1], label="Exc=%.2f" % Exc)
-        plt.plot(omegal, power1[:,0], label="without H")
-        plt.plot(omegal, power2[:,0], label="with H")
-        # plt.errorbar(omegal, power2[:,0], yerr=power2[:,1], label="two bands")
+    # однозонное приближение
+    zer = [calculate("CVC1", "one_band", Exc, Eyc,   0, Ex, Ey, omega, phi, T, n, dt, alltime, tau) for omega in omegal]
+    one = [calculate("CVC1", "one_band", Exc, Eyc, 200, Ex, Ey, omega, phi, T, n, dt, alltime, tau) for omega in omegal]
+    two = [calculate("CVC1", "one_band", Exc, Eyc, 400, Ex, Ey, omega, phi, T, n, dt, alltime, tau) for omega in omegal]
+    # двухзонное
+    # two_bands = [calculate("CVC2", "two_bands", Exc, Eyc, H, Ex, Ey, omega, phi, T, n, dt, alltime, tau) for omega in omegal]
+    #print(one_band)
+    #print(two_bands)
+    power0 = np.array([x["power"] for x in zer])
+    power1 = np.array([x["power"] for x in one])
+    power2 = np.array([x["power"] for x in two])
+    # power2 = np.array([x["power"] for x in two_bands]) * 10e12 * 1.6e-19 / dt
+    # tau1 = np.array([x["tau"] for x in one_band])
+    # tau2 = np.array([x["tau"] for x in two_bands])
+    # lower = np.array([x["lower_band"] for x in two_bands])
+    # upper = np.array([x["upper_band"] for x in two_bands])
+    # plt.errorbar(omegal, power1[:,0], yerr=power1[:,1], label="Exc=%.2f" % Exc)
+    plt.plot(omegal, power0[:,0], label="H = 0")
+    plt.plot(omegal, power1[:,0], label="H = 200")
+    plt.plot(omegal, power2[:,0], label="H = 400")
+    # plt.errorbar(omegal, power2[:,0], yerr=power2[:,1], label="two bands")
     plt.grid()
     plt.legend(loc='upper right')
     plt.title("Absorption")
     plt.show()
 
 if __name__ == '__main__':
-    # freq()
-    cvc()
+    freq()
+    #cvc()

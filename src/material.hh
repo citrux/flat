@@ -46,7 +46,7 @@ public:
 class BigrapheneLower : public Band {
 public:
     const float gamma = 0.35;
-    const float delta =  0.1;
+    const float delta = 0;
 
     const float optical_phonon_energy = 0.196;
     float acoustic_phonon_constant;

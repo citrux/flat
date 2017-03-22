@@ -10,7 +10,7 @@ Vec2 momentum_scattering(float momentum, Particle & particle) {
         theta = 2 * pi * particle.rng.uniform();
         prob = particle.rng.uniform();
     }
-    float psi = atan2(particle.p.y, particle.p.x); 
+    float psi = atan2(particle.p.y, particle.p.x);
     return {momentum * std::cos(psi + theta), momentum * std::sin(psi + theta)};
 }
 
@@ -48,7 +48,7 @@ BigrapheneLower::BigrapheneLower(float temperature) {
     const float Dopt = 1.4e9;
 
     const float T = temperature;
-    
+
     acoustic_phonon_constant = sqr(k * T * Dak) * eV / (2 * hbar *
             rho * sqr(v_s * v_f) * hbar * hbar);
     optical_phonon_constant = k * T * sqr(Dopt) * eV / (4 * hbar *
@@ -58,10 +58,10 @@ BigrapheneLower::BigrapheneLower(float temperature) {
     const float crit_momentum = delta * std::sqrt(2 - 4 * delta * delta / (gamma * gamma + 4 * delta * delta));
     const float max_energy = energy(max_momentum);
     const float min_energy = gamma * delta / std::sqrt(gamma * gamma + 4 * delta * delta);
-    
+
     energy_samples = 10000;
     momentum_precision = 1e-5;
-    
+
     table = std::vector<BandScatteringEntry>(energy_samples);
     for (int i = 0; i < energy_samples; ++i) {
         float e = (min_energy * (energy_samples - 1 - i) + max_energy * i) / (energy_samples - 1);
@@ -86,7 +86,7 @@ float BigrapheneLower::energy(float momentum) const {
     const float gamma2 = gamma * gamma;
     const float gamma4 = gamma2 * gamma2;
     const float p2 = momentum * momentum;
-    return std::sqrt(delta2 + gamma2 / 2 + p2 - std::sqrt(gamma4 / 4 + (gamma2 + 4 * delta2) * p2));
+    return std::sqrt(((p2 - delta2) * (p2 - delta2) + gamma2 * delta2) / (delta2 + gamma2 / 2 + p2 + std::sqrt(gamma4 / 4 + (gamma2 + 4 * delta2) * p2)));
 }
 
 float BigrapheneLower::energy(Vec2 const & momentum) const {
@@ -102,7 +102,11 @@ Vec2 BigrapheneLower::velocity(Vec2 const & momentum) const {
     const float gamma2 = gamma * gamma;
     const float gamma4 = gamma2 * gamma2;
     const float p2 = momentum.dot(momentum);
-    return momentum * (1 - 0.5 * (gamma2 + 4 * delta2) / std::sqrt(gamma4 / 4 + (gamma2 + 4 * delta2) * p2)) / energy(momentum);
+    const float nrg = energy(momentum);
+    if (nrg == 0) {
+        return {0, 0};
+    }
+    return momentum * (1 - 0.5 * (gamma2 + 4 * delta2) / std::sqrt(gamma4 / 4 + (gamma2 + 4 * delta2) * p2)) / nrg;
 }
 
 std::list<ScatteringResult> BigrapheneLower::acoustic_phonon_scattering(Particle & p) {

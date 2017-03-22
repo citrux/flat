@@ -64,6 +64,20 @@ int main(int argc, char const *argv[])
         for (int t = 0; t < s; ++t) {
             Vec2 v = particle.band->velocity(particle.p);
             Vec2 f = Ec + E * Vec2(cos(omega * t), cos(omega * t + phi)) + Vec2(v.y, -v.x) * H;
+            if (std::isnan(f.x) || std::isnan(f.y)) {
+                puts("force is nan!");
+                printf("%e %e\n", f.x, f.y);
+                printf("%e %e\n", v.x, v.y);
+                printf("%e %e\n", particle.p.x, particle.p.y);
+                printf("%e\n", particle.band->energy(particle.p));
+                exit(1);
+            }
+            if (std::isnan(v.x) || std::isnan(v.y)) {
+                puts("wtf");
+                printf("%e %e\n", v.x, v.y);
+                printf("%e %e\n", particle.p.x, particle.p.y);
+                exit(1);
+            }
             datas[i].v += v;
             datas[i].power += v.dot(E * Vec2(cos(omega * t), cos(omega * t + phi)));
             particle.p += f;
@@ -84,7 +98,7 @@ int main(int argc, char const *argv[])
                             ++datas[i].acoustic_phonon_scattering_count;
                             particle.reset_r();
                             particle.band = band;
-							particle.p = result.p;
+                            particle.p = result.p;
                             goto end;
                         }
                     }
@@ -94,7 +108,7 @@ int main(int argc, char const *argv[])
                             ++datas[i].optical_phonon_scattering_count;
                             particle.reset_r();
                             particle.band = band;
-							particle.p = result.p;
+                            particle.p = result.p;
                             goto end;
                         }
                     }
