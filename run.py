@@ -18,11 +18,11 @@ def parse(name, text):
     mean, std = re.search(name + r"\s*=\s*(\S*)\s*\+/-\s*(\S*)", text).groups()
     return [float(mean), float(std)]
 
-def calculate(prefix, mode, Exc, Eyc, H, Ex, Ey, omega, phi, T, n, dt, alltime, tau):
+def calculate(prefix, mode, Exc, Eyc, Hc, Ex, Ey, H, omega, phi, T, n, dt, alltime, tau):
     global iteration
     iteration += 1
     print("%d" % iteration)
-    args = "%e %e %e %e %e %e %e %e %d %e %e\n" % (Exc, Eyc, H, Ex, Ey, omega, phi, T, n, dt, alltime)
+    args = "%e %e %e %e %e %e %e %e %e %d %e %e\n" % (Exc, Eyc, Hc, Ex, Ey, H, omega, phi, T, n, dt, alltime)
     out, err = Popen([program], shell=True, stdin=PIPE, stdout=PIPE).communicate(input=args.encode("utf8"))
     data = out.decode("utf8")
     print(data)
@@ -49,7 +49,7 @@ def cvc():
     alltime = 4e-9
     tau     = 3e-12
     Excl = np.linspace(0, 1, 21)
-    one = [calculate("CVC1", "one_band", Exc, Eyc, H, Ex, Ey, omega, phi, T, n, dt, alltime, tau) for Exc in Excl]
+    one = [calculate("CVC1", "one_band", Exc, Eyc, Hc, Ex, Ey, H, omega, phi, T, n, dt, alltime, tau) for Exc in Excl]
     vx = np.array([x["v_x"] for x in one])
     vy = np.array([x["v_y"] for x in one])
     plt.plot(Excl, vx[:,0])
@@ -95,6 +95,26 @@ def freq():
     plt.title("Absorption")
     plt.show()
 
+def follow():
+    Exc     = 0
+    Eyc     = 0
+    Hc      = 0
+    Ex      = 0
+    Eyl     = np.linspace(0, 10, 21)
+    H       = 0
+    omega   = 1e11
+    phi     = np.pi/2
+    T       = 300
+    n       = 16
+    dt      = 1e-13
+    alltime = 1e-8
+    tau     = 3e-12
+    r = [calculate("CVC1", "one_band", Exc, Eyc, Hc, Ex, Ey, Ey, omega, phi, T, n, dt, alltime, tau) for Ey in Eyl]
+    plt.plot(Eyl * Eyl, [x["v_x"][0] for x in r])
+    plt.show()
+
+
 if __name__ == '__main__':
-    freq()
+    #freq()
     #cvc()
+    follow()

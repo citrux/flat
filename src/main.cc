@@ -9,14 +9,15 @@
 int main(int argc, char const *argv[])
 {
     Vec2 E, Ec;
-    float H, omega, phi, T;
+    float H, Hc, omega, phi, T;
     int n;
     float dt, all_time;
 
     /* input */
     std::cin >> Ec.x >> Ec.y;
-    std::cin >> H;
+    std::cin >> Hc;
     std::cin >> E.x >> E.y;
+    std::cin >> H;
     std::cin >> omega;
     std::cin >> phi;
     std::cin >> T;
@@ -32,6 +33,7 @@ int main(int argc, char const *argv[])
     const float field_dimensionless_factor = e * v_f * dt / eV;
     Ec *= field_dimensionless_factor;
     E *= field_dimensionless_factor;
+    Hc *= v_f / c * field_dimensionless_factor;
     H *= v_f / c * field_dimensionless_factor;
     omega *= dt;
 
@@ -63,7 +65,7 @@ int main(int argc, char const *argv[])
         int s = all_time / dt + 1;
         for (int t = 0; t < s; ++t) {
             Vec2 v = particle.band->velocity(particle.p);
-            Vec2 f = Ec + E * Vec2(cos(omega * t), cos(omega * t + phi)) + Vec2(v.y, -v.x) * H;
+            Vec2 f = Ec + E * Vec2(std::cos(omega * t), std::cos(omega * t + phi)) + Vec2(v.y, -v.x) * (H + H * std::cos(omega * t));
             if (std::isnan(f.x) || std::isnan(f.y)) {
                 puts("force is nan!");
                 printf("%e %e\n", f.x, f.y);
