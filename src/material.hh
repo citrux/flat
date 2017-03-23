@@ -43,7 +43,8 @@ public:
     virtual std::list<ScatteringResult> optical_phonon_scattering(Particle & p) = 0;
 };
 
-class BigrapheneLower : public Band {
+namespace Bigraphene {
+class Lower : public Band {
 public:
     const float gamma = 0.35;
     const float delta = 0;
@@ -65,6 +66,7 @@ public:
     std::list<ScatteringResult> acoustic_phonon_scattering(Particle & p);
     std::list<ScatteringResult> optical_phonon_scattering(Particle & p);
 
-    BigrapheneLower(float temperature);
-    ~BigrapheneLower() {};
+    Lower(float temperature);
+    ~Lower() {};
+};
 };

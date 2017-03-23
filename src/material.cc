@@ -39,10 +39,11 @@ void Particle::reset_r() {
     r = -log(rng.uniform());
 }
 
+namespace Bigraphene {
 /*
- * BigrapheneLower
+ * Lower
  */
-BigrapheneLower::BigrapheneLower(float temperature) {
+Lower::Lower(float temperature) {
     const float rho = 2 * 7.7e-8;
     const float Dak = 18;
     const float Dopt = 1.4e9;
@@ -77,11 +78,11 @@ BigrapheneLower::BigrapheneLower(float temperature) {
     }
 }
 
-float BigrapheneLower::min_energy() const {
+float Lower::min_energy() const {
     return delta * gamma / std::sqrt(gamma * gamma + 4 * delta * delta);
 }
 
-float BigrapheneLower::energy(float momentum) const {
+float Lower::energy(float momentum) const {
     const float delta2 = delta * delta;
     const float gamma2 = gamma * gamma;
     const float gamma4 = gamma2 * gamma2;
@@ -89,15 +90,15 @@ float BigrapheneLower::energy(float momentum) const {
     return std::sqrt(((p2 - delta2) * (p2 - delta2) + gamma2 * delta2) / (delta2 + gamma2 / 2 + p2 + std::sqrt(gamma4 / 4 + (gamma2 + 4 * delta2) * p2)));
 }
 
-float BigrapheneLower::energy(Vec2 const & momentum) const {
+float Lower::energy(Vec2 const & momentum) const {
     return energy(momentum.len());
 }
 
-float BigrapheneLower::velocity(float momentum) const {
+float Lower::velocity(float momentum) const {
     return velocity(Vec2(momentum, 0)).x;
 }
 
-Vec2 BigrapheneLower::velocity(Vec2 const & momentum) const {
+Vec2 Lower::velocity(Vec2 const & momentum) const {
     const float delta2 = delta * delta;
     const float gamma2 = gamma * gamma;
     const float gamma4 = gamma2 * gamma2;
@@ -109,7 +110,7 @@ Vec2 BigrapheneLower::velocity(Vec2 const & momentum) const {
     return momentum * (1 - 0.5 * (gamma2 + 4 * delta2) / std::sqrt(gamma4 / 4 + (gamma2 + 4 * delta2) * p2)) / nrg;
 }
 
-std::list<ScatteringResult> BigrapheneLower::acoustic_phonon_scattering(Particle & p) {
+std::list<ScatteringResult> Lower::acoustic_phonon_scattering(Particle & p) {
     float e = energy(p.p);
     int i = (e - table[0].energy) / (table[1].energy - table[0].energy);
     std::list<ScatteringResult> result;
@@ -125,7 +126,7 @@ std::list<ScatteringResult> BigrapheneLower::acoustic_phonon_scattering(Particle
     return result;
 }
 
-std::list<ScatteringResult> BigrapheneLower::optical_phonon_scattering(Particle & p) {
+std::list<ScatteringResult> Lower::optical_phonon_scattering(Particle & p) {
     float e = energy(p.p) - optical_phonon_energy;
     int i = (e - table[0].energy) / (table[1].energy - table[0].energy);
     std::list<ScatteringResult> result;
@@ -139,4 +140,5 @@ std::list<ScatteringResult> BigrapheneLower::optical_phonon_scattering(Particle 
         result.push_back({momentum_scattering(momentum, p), optical_phonon_constant * 2 * pi * momentum});
     }
     return result;
+}
 }
