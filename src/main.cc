@@ -45,7 +45,8 @@ int main(int argc, char const *argv[])
         seeds[i] = rand();
     }
     Bigraphene::Lower *lower = new Bigraphene::Lower(T);
-    std::vector<Band*> bands = {lower};
+    Bigraphene::Upper *upper = new Bigraphene::Upper(T);
+    std::vector<Band*> bands = {lower, upper};
     puts("start calculation");
     #pragma omp parallel for
     for (int i = 0; i < n; ++i) {
