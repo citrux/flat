@@ -58,14 +58,13 @@ Lower::Lower(float temperature) {
     const float max_momentum = 2;
     const float crit_momentum = delta * std::sqrt(2 - 4 * delta * delta / (gamma * gamma + 4 * delta * delta));
     const float max_energy = energy(max_momentum);
-    const float min_energy = gamma * delta / std::sqrt(gamma * gamma + 4 * delta * delta);
 
     energy_samples = 10000;
     momentum_precision = 1e-5;
 
     table = std::vector<BandScatteringEntry>(energy_samples);
     for (int i = 0; i < energy_samples; ++i) {
-        float e = (min_energy * (energy_samples - 1 - i) + max_energy * i) / (energy_samples - 1);
+        float e = (min_energy() * (energy_samples - 1 - i) + max_energy * i) / (energy_samples - 1);
         table[i].energy = e;
         if (e < delta) {
             float p = bisection([this,e](float p){return energy(p) - e;}, 0, crit_momentum, momentum_precision);
@@ -111,7 +110,7 @@ Vec2 Lower::velocity(Vec2 const & momentum) const {
 }
 
 std::list<ScatteringResult> Lower::acoustic_phonon_scattering(Particle & p) {
-    float e = energy(p.p);
+    float e = p.band->energy(p.p);
     int i = (e - table[0].energy) / (table[1].energy - table[0].energy);
     std::list<ScatteringResult> result;
     if (i >= 0 && i < energy_samples) {
@@ -127,7 +126,7 @@ std::list<ScatteringResult> Lower::acoustic_phonon_scattering(Particle & p) {
 }
 
 std::list<ScatteringResult> Lower::optical_phonon_scattering(Particle & p) {
-    float e = energy(p.p) - optical_phonon_energy;
+    float e = p.band->energy(p.p) - optical_phonon_energy;
     int i = (e - table[0].energy) / (table[1].energy - table[0].energy);
     std::list<ScatteringResult> result;
     if (i >= 0 && i < energy_samples) {
@@ -141,4 +140,95 @@ std::list<ScatteringResult> Lower::optical_phonon_scattering(Particle & p) {
     }
     return result;
 }
+/*
+ * Upper
+ */
+Upper::Upper(float temperature) {
+    const float rho = 2 * 7.7e-8;
+    const float Dak = 18;
+    const float Dopt = 1.4e9;
+
+    const float T = temperature;
+
+    acoustic_phonon_constant = sqr(k * T * Dak) * eV / (2 * hbar *
+            rho * sqr(v_s * v_f) * hbar * hbar);
+    optical_phonon_constant = k * T * sqr(Dopt) * eV / (4 * hbar *
+            optical_phonon_energy * rho * sqr(v_f));
+
+    const float max_momentum = 2;
+    const float max_energy = energy(max_momentum);
+
+    energy_samples = 10000;
+    momentum_precision = 1e-5;
+
+    table = std::vector<BandScatteringEntry>(energy_samples);
+    for (int i = 0; i < energy_samples; ++i) {
+        float e = (min_energy() * (energy_samples - 1 - i) + max_energy * i) / (energy_samples - 1);
+        table[i].energy = e;
+        float p = bisection([this,e](float p){return energy(p) - e;}, 0, max_momentum, momentum_precision);
+        table[i].integrals.push_back({p, 2 * pi * p / std::abs(velocity(p))});
+    }
+}
+
+float Upper::min_energy() const {
+    return std::sqrt(delta*delta + gamma*gamma);
+}
+
+float Upper::energy(float momentum) const {
+    const float delta2 = delta * delta;
+    const float gamma2 = gamma * gamma;
+    const float gamma4 = gamma2 * gamma2;
+    const float p2 = momentum * momentum;
+    return std::sqrt(delta2 + gamma2 / 2 + p2 + std::sqrt(gamma4 / 4 + (gamma2 + 4 * delta2) * p2));
+}
+
+float Upper::energy(Vec2 const & momentum) const {
+    return energy(momentum.len());
+}
+
+float Upper::velocity(float momentum) const {
+    return velocity(Vec2(momentum, 0)).x;
+}
+
+Vec2 Upper::velocity(Vec2 const & momentum) const {
+    const float delta2 = delta * delta;
+    const float gamma2 = gamma * gamma;
+    const float gamma4 = gamma2 * gamma2;
+    const float p2 = momentum.dot(momentum);
+    const float nrg = energy(momentum);
+    return momentum * (1 + 0.5 * (gamma2 + 4 * delta2) / std::sqrt(gamma4 / 4 + (gamma2 + 4 * delta2) * p2)) / nrg;
+}
+
+std::list<ScatteringResult> Upper::acoustic_phonon_scattering(Particle & p) {
+    float e = p.band->energy(p.p);
+    int i = (e - table[0].energy) / (table[1].energy - table[0].energy);
+    std::list<ScatteringResult> result;
+    if (i >= 0 && i < energy_samples) {
+        for (auto const & x: table[i].integrals) {
+            result.push_back({momentum_scattering(x.momentum, p), acoustic_phonon_constant * x.integral});
+        }
+    }
+    if (i >= energy_samples-1) {
+        float momentum = e + .5 * std::sqrt(gamma * gamma + 4 * delta * delta);
+        result.push_back({momentum_scattering(momentum, p), acoustic_phonon_constant * 2 * pi * momentum});
+    }
+    return result;
+}
+
+std::list<ScatteringResult> Upper::optical_phonon_scattering(Particle & p) {
+    float e = p.band->energy(p.p) - optical_phonon_energy;
+    int i = (e - table[0].energy) / (table[1].energy - table[0].energy);
+    std::list<ScatteringResult> result;
+    if (i >= 0 && i < energy_samples) {
+        for (auto const & x: table[i].integrals) {
+            result.push_back({momentum_scattering(x.momentum, p), optical_phonon_constant * x.integral});
+        }
+    }
+    if (i >= energy_samples-1) {
+        float momentum = e + .5 * std::sqrt(gamma * gamma + 4 * delta * delta);
+        result.push_back({momentum_scattering(momentum, p), optical_phonon_constant * 2 * pi * momentum});
+    }
+    return result;
+}
+
 }

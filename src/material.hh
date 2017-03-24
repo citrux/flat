@@ -52,7 +52,7 @@ public:
     const float optical_phonon_energy = 0.196;
     float acoustic_phonon_constant;
     float optical_phonon_constant;
-    
+
     std::vector<BandScatteringEntry> table;
     int energy_samples;
     int momentum_samples;
@@ -68,5 +68,30 @@ public:
 
     Lower(float temperature);
     ~Lower() {};
+};
+class Upper : public Band {
+public:
+    const float gamma = 0.35;
+    const float delta = 0;
+
+    const float optical_phonon_energy = 0.196;
+    float acoustic_phonon_constant;
+    float optical_phonon_constant;
+
+    std::vector<BandScatteringEntry> table;
+    int energy_samples;
+    int momentum_samples;
+    float momentum_precision;
+
+    float min_energy() const;
+    float energy(float momentum) const;
+    float energy(Vec2 const & momentum) const;
+    float velocity(float momentum) const;
+    Vec2 velocity(Vec2 const & momentum) const;
+    std::list<ScatteringResult> acoustic_phonon_scattering(Particle & p);
+    std::list<ScatteringResult> optical_phonon_scattering(Particle & p);
+
+    Upper(float temperature);
+    ~Upper() {};
 };
 };
