@@ -95,3 +95,25 @@ public:
     ~Upper() {};
 };
 };
+
+namespace Graphene {
+class Bnd : public Band {
+public:
+    const float delta = 0.13;
+
+    const float optical_phonon_energy = 0.196;
+    float acoustic_phonon_constant;
+    float optical_phonon_constant;
+
+    float min_energy() const;
+    float energy(float momentum) const;
+    float energy(Vec2 const & momentum) const;
+    float velocity(float momentum) const;
+    Vec2 velocity(Vec2 const & momentum) const;
+    std::list<ScatteringResult> acoustic_phonon_scattering(Particle & p);
+    std::list<ScatteringResult> optical_phonon_scattering(Particle & p);
+
+    Bnd(float temperature);
+    ~Bnd() {};
+};
+}

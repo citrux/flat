@@ -40,14 +40,14 @@ void Particle::reset_r() {
 }
 
 namespace Bigraphene {
+const float rho = 2 * 7.7e-8;
+const float Dak = 18;
+const float Dopt = 1.4e9;
+
 /*
  * Lower
  */
 Lower::Lower(float temperature) {
-    const float rho = 2 * 7.7e-8;
-    const float Dak = 18;
-    const float Dopt = 1.4e9;
-
     const float T = temperature;
 
     acoustic_phonon_constant = sqr(k * T * Dak) * eV / (2 * hbar *
@@ -144,10 +144,6 @@ std::list<ScatteringResult> Lower::optical_phonon_scattering(Particle & p) {
  * Upper
  */
 Upper::Upper(float temperature) {
-    const float rho = 2 * 7.7e-8;
-    const float Dak = 18;
-    const float Dopt = 1.4e9;
-
     const float T = temperature;
 
     acoustic_phonon_constant = sqr(k * T * Dak) * eV / (2 * hbar *
@@ -226,6 +222,64 @@ std::list<ScatteringResult> Upper::optical_phonon_scattering(Particle & p) {
     }
     if (i >= energy_samples-1) {
         float momentum = e + .5 * std::sqrt(gamma * gamma + 4 * delta * delta);
+        result.push_back({momentum_scattering(momentum, p), optical_phonon_constant * 2 * pi * momentum});
+    }
+    return result;
+}
+
+}
+
+namespace Graphene {
+const float rho = 7.7e-8;
+const float Dak = 18;
+const float Dopt = 1.4e9;
+
+Bnd::Bnd(float temperature) {
+    const float T = temperature;
+    acoustic_phonon_constant = sqr(k * T * Dak) * eV / (2 * hbar *
+            rho * sqr(v_s * v_f) * hbar * hbar);
+    optical_phonon_constant = k * T * sqr(Dopt) * eV / (4 * hbar *
+            optical_phonon_energy * rho * sqr(v_f));
+}
+
+float Bnd::min_energy() const {
+    return delta;
+}
+
+float Bnd::energy(float momentum) const {
+    const float delta2 = delta * delta;
+    const float p2 = momentum * momentum;
+    return std::sqrt(delta2 + p2);
+}
+
+float Bnd::energy(Vec2 const & momentum) const {
+    return energy(momentum.len());
+}
+
+float Bnd::velocity(float momentum) const {
+    return velocity(Vec2(momentum, 0)).x;
+}
+
+Vec2 Bnd::velocity(Vec2 const & momentum) const {
+    const float nrg = energy(momentum);
+    return momentum / nrg;
+}
+
+std::list<ScatteringResult> Bnd::acoustic_phonon_scattering(Particle & p) {
+    float e = p.band->energy(p.p);
+    std::list<ScatteringResult> result;
+    if (e > delta) {
+        float momentum = std::sqrt(e * e - delta * delta);
+        result.push_back({momentum_scattering(momentum, p), optical_phonon_constant * 2 * pi * momentum});
+    }
+    return result;
+}
+
+std::list<ScatteringResult> Bnd::optical_phonon_scattering(Particle & p) {
+    float e = p.band->energy(p.p) - optical_phonon_energy;
+    std::list<ScatteringResult> result;
+    if (e > delta) {
+        float momentum = std::sqrt(e * e - delta * delta);
         result.push_back({momentum_scattering(momentum, p), optical_phonon_constant * 2 * pi * momentum});
     }
     return result;

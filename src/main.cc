@@ -8,12 +8,14 @@
 
 int main(int argc, char const *argv[])
 {
+    std::string material;
     Vec2 E, Ec;
     float H, Hc, omega, phi, T;
     int n;
     float dt, all_time;
 
     /* input */
+    std::cin >> material;
     std::cin >> Ec.x >> Ec.y;
     std::cin >> Hc;
     std::cin >> E.x >> E.y;
@@ -25,6 +27,10 @@ int main(int argc, char const *argv[])
     std::cin >> dt;
     std::cin >> all_time;
 
+    if (material != "bigraphene" && material != "graphene") {
+        puts("incorrect material");
+        exit(1);
+    }
     printf("Field configuration:\n");
     printf("Ec: {%e, %e}\n", Ec.x, Ec.y);
     printf("H: %e\n", H);
@@ -44,9 +50,15 @@ int main(int argc, char const *argv[])
     for (int i = 0; i < n; ++i) {
         seeds[i] = rand();
     }
-    Bigraphene::Lower *lower = new Bigraphene::Lower(T);
-    Bigraphene::Upper *upper = new Bigraphene::Upper(T);
-    std::vector<Band*> bands = {lower, upper};
+    std::vector<Band*> bands;
+    if (material == "bigraphene") {
+        Bigraphene::Lower *lower = new Bigraphene::Lower(T);
+        Bigraphene::Upper *upper = new Bigraphene::Upper(T);
+        bands = {lower, upper};
+    } else {
+        Graphene::Bnd *band = new Graphene::Bnd(T);
+        bands = {band};
+    }
     puts("start calculation");
     #pragma omp parallel for
     for (int i = 0; i < n; ++i) {
