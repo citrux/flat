@@ -10,7 +10,7 @@ Hcl     = np.linspace(20, 1000, 50)
 for Exc in Excl:
     line = []
     for Hc in Hcl:
-        f = Flat(m="bigraphene"
+        f = Flat(m="bigraphene",
                  Exc=Exc,
                  Hc=Hc,
                  Ex=0.3,
