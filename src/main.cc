@@ -62,8 +62,8 @@ int main(int argc, char const *argv[])
     std::vector<Band*> bands;
     if (material == "bigraphene") {
         Bigraphene::Lower *lower = new Bigraphene::Lower(T);
-        Bigraphene::Upper *upper = new Bigraphene::Upper(T);
-        bands = {lower, upper};
+        //Bigraphene::Upper *upper = new Bigraphene::Upper(T);
+        bands = {lower/*, upper*/};
     } else {
         Graphene::Bnd *band = new Graphene::Bnd(T);
         bands = {band};
