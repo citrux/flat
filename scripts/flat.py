@@ -8,9 +8,9 @@ class Flat:
                        Ex=0,  Ey=0,  H=0,
                        omega=0, phi=0, T=0,
                        n=0, dt=0, alltime=0):
-        self.program = "./flat"
+        self.program = "../flat"
         if sys.platform.startswith("win32"):
-            self.program = "flat.exe"
+            self.program = "../flat.exe"
         if dumping:
             self.program += " -d"
         self.args = "%s %e %e %e %e %e %e %e %e %e %d %e %e\n" % (m, Exc, Eyc, Hc, Ex, Ey, H, omega, phi, T, n, dt, alltime)
