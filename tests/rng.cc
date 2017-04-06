@@ -1,59 +1,58 @@
-#include <cstdio>
 #include <cmath>
+#include <cstdio>
+#include <gtest/gtest.h>
 #include "rng.hh"
 #include "physics.hh"
 
 float phi(Rng & rng) {
     float x = 2 * pi * rng.uniform();
     float prob = rng.uniform();
-    while((std::cos(x) + 1) / 2 < prob) {
+    while(0.5 * (std::cos(x) + 1) < prob) {
         x = 2 * pi * rng.uniform();
         prob = rng.uniform();
     }
     return x;
 }
 
-int main(int argc, const char *argv[])
+TEST(RngTest, Uniform)
 {
-    int n = 100000;
-    for (int i = 0; i < 8; ++i) {
-        double mean = 0;
-        double stdev = 0;
+    const int n = 100000;
+    for (int i = 0; i < 100; ++i) {
+        const int m = 100;
+        int dist[m] = {0};
         Rng rng(i);
         for (int j = 0; j < n; j++) {
             auto x = rng.uniform();
-            mean += x;
-            stdev += x * x;
+            ++dist[static_cast<int>(x * m)];
         }
-        mean /= n;
-        stdev /= n;
-        stdev -= mean * mean;
-        stdev = std::sqrt(stdev);
-        printf("seed=%d: mean=%f stdev=%f\n", i, mean, stdev);
+        for (int j = 0; j < m; j++) {
+            float p = 1.0 / m;
+            float q = 1 - p;
+            EXPECT_LE(std::abs(dist[j] - n * p), 5 * std::sqrt(n * p * q)) << i << " " << j << " " << dist[j];
+        }
     }
+}
 
-    Rng rng(0);
-    const int bins = 20;
-    float phi_min = 0;
-    float phi_max = 1;
-    int dist[bins] = {0};
-    float mean = 0;
-    float stdev = 0;
-    for (int i = 0; i < n; i++) {
-        auto x = rng.uniform();
-        ++dist[(int)(x / (phi_max - phi_min) * bins)];
-        mean += x;
-        stdev += x * x;
+TEST(RngTest, Cos) {
+    const int n = 100000;
+    for (int i = 0; i < 100; ++i) {
+        Rng rng(i);
+        const int m = 100;
+        int dist[m] = {0};
+        for (int j = 0; j < n; j++) {
+            auto x = phi(rng);
+            ++dist[static_cast<int>(x / (2 * pi) * m)];
+        }
+        for (int j = 0; j < m; j++) {
+            float theta = 2 * pi * (j + 0.5) / m;
+            float p = (1 + std::cos(theta)) / m;
+            float q = 1 - p;
+            EXPECT_LE(std::abs(dist[j] - n * p), 5 * std::sqrt(n * p * q)) << i << " " << j << " " << dist[j];
+        }
     }
-    mean /= n;
-    stdev /= n;
-    stdev -= mean * mean;
-    stdev = std::sqrt(stdev);
-    printf("phi: mean=%f stdev=%f\n", mean, stdev);
-    FILE *fd = fopen("phi.dat", "w");
-    for (int i = 0; i < bins; i++) {
-        fprintf(fd, "%f %d\n", phi_min + (phi_max - phi_min) / bins * (i + 0.5), dist[i]);
-    }
-    fclose(fd);
-    return 0;
+}
+
+int main(int argc, char **argv) {
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
