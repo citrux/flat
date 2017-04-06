@@ -28,7 +28,7 @@ struct BandScatteringEntry {
 };
 
 struct ScatteringResult {
-    Vec2 p;
+    float momentum;
     float rate;
 };
 
@@ -41,6 +41,7 @@ public:
     virtual Vec2 velocity(Vec2 const & momentum) const = 0;
     virtual std::list<ScatteringResult> acoustic_phonon_scattering(Particle & p) = 0;
     virtual std::list<ScatteringResult> optical_phonon_scattering(Particle & p) = 0;
+    Vec2 momentum_scattering(float momentum, Particle & p);
 };
 
 namespace Bigraphene {

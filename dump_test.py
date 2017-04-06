@@ -7,7 +7,7 @@ f = Flat(dumping=True,
          Ex=0.3,
          omega=5e10,
          T=300,
-         n=16,
+         n=100,
          dt=1e-13,
          alltime=1e-8)
 f.run(True)

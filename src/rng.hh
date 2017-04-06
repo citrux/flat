@@ -12,13 +12,14 @@ struct Rng {
     Rng(unsigned int seed) : x(seed),
         y(362436069),
         z(521288629),
-        w(88675123) {};
+        w(88675123) {
+    };
     Rng() : x(0),
         y(362436069),
         z(521288629),
         w(88675123) {};
     float uniform() {
-        unsigned int t = x ^ (x << 1);
+        unsigned int t = x ^ (x << 11);
         x = y;
         y = z;
         z = w;
