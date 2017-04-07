@@ -34,6 +34,7 @@ int main(int argc, char const *argv[])
     std::cin >> dt;
     std::cin >> all_time;
 
+    printf("threads: %d\n", omp_get_num_threads());
     if (material != "bigraphene" && material != "graphene") {
         puts("incorrect material");
         exit(1);
