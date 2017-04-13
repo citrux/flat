@@ -73,11 +73,13 @@ Lower::Lower(float temperature, float _delta) : delta(_delta) {
         table[i].energy = e;
         if (e < delta) {
             float p = bisection([this,e](float p){return energy(p) - e;}, 0, crit_momentum, momentum_precision);
-            table[i].integrals.push_back({p, 2 * pi * p / std::abs(velocity(p))});
+            table[i].integrals.push_back({p,
+                    2 * pi * p / std::sqrt(std::pow(velocity(p), 2) + 1e-6)});
         }
         if (e < max_energy) {
             float p = bisection([this,e](float p){return energy(p) - e;}, crit_momentum, max_momentum, momentum_precision);
-            table[i].integrals.push_back({p, 2 * pi * p / std::abs(velocity(p))});
+            table[i].integrals.push_back({p,
+                    2 * pi * p / std::sqrt(std::pow(velocity(p), 2) + 1e-6)});
         }
     }
 }
