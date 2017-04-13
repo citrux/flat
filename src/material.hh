@@ -48,7 +48,7 @@ namespace Bigraphene {
 class Lower : public Band {
 public:
     const float gamma = 0.35;
-    const float delta = 0;
+    const float delta;
 
     const float optical_phonon_energy = 0.196;
     float acoustic_phonon_constant;
@@ -67,13 +67,13 @@ public:
     std::list<ScatteringResult> acoustic_phonon_scattering(Particle & p);
     std::list<ScatteringResult> optical_phonon_scattering(Particle & p);
 
-    Lower(float temperature);
+    Lower(float temperature, float delta=0);
     ~Lower() {};
 };
 class Upper : public Band {
 public:
     const float gamma = 0.35;
-    const float delta = 0;
+    const float delta;
 
     const float optical_phonon_energy = 0.196;
     float acoustic_phonon_constant;
@@ -92,7 +92,7 @@ public:
     std::list<ScatteringResult> acoustic_phonon_scattering(Particle & p);
     std::list<ScatteringResult> optical_phonon_scattering(Particle & p);
 
-    Upper(float temperature);
+    Upper(float temperature, float delta=0);
     ~Upper() {};
 };
 };
@@ -100,7 +100,7 @@ public:
 namespace Graphene {
 class Bnd : public Band {
 public:
-    const float delta = 0.13;
+    const float delta;
 
     const float optical_phonon_energy = 0.196;
     float acoustic_phonon_constant;
@@ -114,7 +114,7 @@ public:
     std::list<ScatteringResult> acoustic_phonon_scattering(Particle & p);
     std::list<ScatteringResult> optical_phonon_scattering(Particle & p);
 
-    Bnd(float temperature);
+    Bnd(float temperature, float delta=0.13);
     ~Bnd() {};
 };
 }

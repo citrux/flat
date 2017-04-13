@@ -7,6 +7,28 @@
 #include "material.hh"
 #include "stats.hh"
 
+#include <string>
+#include <sstream>
+#include <vector>
+#include <iterator>
+
+template<typename Out>
+void split(const std::string &s, char delim, Out result) {
+    std::stringstream ss;
+    ss.str(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        *(result++) = item;
+    }
+}
+
+
+std::vector<std::string> split(const std::string &s, char delim) {
+    std::vector<std::string> elems;
+    split(s, delim, std::back_inserter(elems));
+    return elems;
+}
+
 int main(int argc, char const *argv[])
 {
     bool dumping = false;
@@ -15,7 +37,7 @@ int main(int argc, char const *argv[])
             dumping = true;
         }
     }
-    std::string material;
+    std::string material, material_name;
     Vec2 E, Ec;
     float H, Hc, omega, phi, T;
     int n;
@@ -34,15 +56,19 @@ int main(int argc, char const *argv[])
     std::cin >> dt;
     std::cin >> all_time;
 
+    auto material_params = split(material, '_');
+    material_name = material_params[0];
+
     printf("threads: %d\n", omp_get_num_threads());
-    if (material != "bigraphene" && material != "graphene") {
+    if (material_name != "bigraphene" && material_name != "graphene") {
         puts("incorrect material");
         exit(1);
     }
     printf("Field configuration:\n");
     printf("Ec: {%e, %e}\n", Ec.x, Ec.y);
-    printf("H: %e\n", H);
+    printf("Hc: %e\n", Hc);
     printf("E: {%e, %e}\n", E.x, E.y);
+    printf("H: %e\n", H);
 
     const float field_dimensionless_factor = e * v_f * dt / eV;
     Ec *= field_dimensionless_factor;
@@ -63,12 +89,23 @@ int main(int argc, char const *argv[])
         seeds[i] = rand();
     }
     std::vector<Band*> bands;
-    if (material == "bigraphene") {
-        Bigraphene::Lower *lower = new Bigraphene::Lower(T);
-        //Bigraphene::Upper *upper = new Bigraphene::Upper(T);
-        bands = {lower/*, upper*/};
+    if (material_name == "bigraphene") {
+        float delta = 0;
+        if (material_params.size() > 1) {
+            delta = atof(material_params[1].c_str());
+        }
+        Bigraphene::Lower *lower = new Bigraphene::Lower(T, delta);
+        bands = {lower};
+        if (material_params.size() > 2) {
+            Bigraphene::Upper *upper = new Bigraphene::Upper(T);
+            bands.push_back(upper);
+        }
     } else {
-        Graphene::Bnd *band = new Graphene::Bnd(T);
+        float delta = 0;
+        if (material_params.size() > 1) {
+            delta = atof(material_params[1].c_str());
+        }
+        Graphene::Bnd *band = new Graphene::Bnd(T, delta);
         bands = {band};
     }
     puts("start calculation");

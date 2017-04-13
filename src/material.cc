@@ -52,7 +52,7 @@ const float Dopt = 1.4e9;
 /*
  * Lower
  */
-Lower::Lower(float temperature) {
+Lower::Lower(float temperature, float _delta) : delta(_delta) {
     const float T = temperature;
 
     acoustic_phonon_constant = k * T * sqr(Dak) * eV / (2 * hbar *
@@ -148,7 +148,7 @@ std::list<ScatteringResult> Lower::optical_phonon_scattering(Particle & p) {
 /*
  * Upper
  */
-Upper::Upper(float temperature) {
+Upper::Upper(float temperature, float _delta) : delta(_delta) {
     const float T = temperature;
 
     acoustic_phonon_constant = k * T * sqr(Dak) * eV / (2 * hbar *
@@ -239,7 +239,7 @@ const float rho = 7.7e-8;
 const float Dak = 18;
 const float Dopt = 1.4e9;
 
-Bnd::Bnd(float temperature) {
+Bnd::Bnd(float temperature, float _delta) : delta(_delta) {
     const float T = temperature;
     acoustic_phonon_constant = k * T * sqr(Dak) * eV / (2 * hbar *
             rho * sqr(v_s * v_f) * hbar * hbar) / 2 / pi;
