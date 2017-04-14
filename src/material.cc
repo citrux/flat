@@ -70,19 +70,19 @@ Lower::Lower(float temperature, float _delta) : delta(_delta) {
     table = std::vector<BandScatteringEntry>(energy_samples);
     table[0].energy = min_energy();
     table[0].integrals.push_back({crit_momentum,
-                    2 * pi * crit_momentum / std::sqrt(0 + 1e-3)});
+                    2.0f * pi * crit_momentum / std::sqrt(0 + 1e-3f)});
     for (int i = 1; i < energy_samples; ++i) {
         float e = (min_energy() * (energy_samples - 1 - i) + max_energy * i) / (energy_samples - 1);
         table[i].energy = e;
         if (e < delta) {
             float p = bisection([this,e](float p){return energy(p) - e;}, 0, crit_momentum, momentum_precision);
             table[i].integrals.push_back({p,
-                    2 * pi * p / std::sqrt(std::pow(velocity(p), 2) + 1e-3)});
+                    2.0f * pi * p / std::sqrt(std::pow(velocity(p), 2) + 1e-3f)});
         }
         if (e < max_energy) {
             float p = bisection([this,e](float p){return energy(p) - e;}, crit_momentum, max_momentum, momentum_precision);
             table[i].integrals.push_back({p,
-                    2 * pi * p / std::sqrt(std::pow(velocity(p), 2) + 1e-3)});
+                    2.0f * pi * p / std::sqrt(std::pow(velocity(p), 2) + 1e-3f)});
         }
     }
 }

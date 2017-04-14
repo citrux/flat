@@ -84,7 +84,8 @@ int main(int argc, char const *argv[])
 
     std::vector<Data> datas(n);
     std::vector<unsigned int> seeds(n);
-    float* dump = new float[2 * n * s];
+    float* dump;
+    if (dumping) { dump = new float[2 * n * s]; }
     srand(time(nullptr));
     for (int i = 0; i < n; ++i) {
         seeds[i] = rand();
@@ -126,8 +127,10 @@ int main(int argc, char const *argv[])
 
         /* simulation */
         for (int t = 0; t < s; ++t) {
-            dump[2 * t * n + 2 * i] = particle.p.x;
-            dump[2 * t * n + 2 * i + 1] = particle.p.y;
+            if (dumping) {
+                dump[2 * t * n + 2 * i] = particle.p.x;
+                dump[2 * t * n + 2 * i + 1] = particle.p.y;
+            }
             Vec2 v = particle.band->velocity(particle.p);
             Vec2 f = Ec + E * Vec2(std::cos(omega * t), std::cos(omega * t + phi)) +
                 Vec2(v.y, -v.x) * (Hc + H * std::cos(omega * t));
