@@ -32,9 +32,12 @@ std::vector<std::string> split(const std::string &s, char delim) {
 int main(int argc, char const *argv[])
 {
     bool dumping = false;
+    char dumpname[256] = "dump.bin";
     for(int i = 1; i < argc; ++i) {
         if (!strcmp(argv[i], "-d")) {
             dumping = true;
+            if (i + 1 < argc)
+                strcpy(dumpname, argv[i+1]);
         }
     }
     std::string material, material_name;
@@ -81,9 +84,7 @@ int main(int argc, char const *argv[])
 
     std::vector<Data> datas(n);
     std::vector<unsigned int> seeds(n);
-    /*
     float* dump = new float[2 * n * s];
-    */
     srand(time(nullptr));
     for (int i = 0; i < n; ++i) {
         seeds[i] = rand();
@@ -125,10 +126,8 @@ int main(int argc, char const *argv[])
 
         /* simulation */
         for (int t = 0; t < s; ++t) {
-            /*
             dump[2 * t * n + 2 * i] = particle.p.x;
             dump[2 * t * n + 2 * i + 1] = particle.p.y;
-            */
             Vec2 v = particle.band->velocity(particle.p);
             Vec2 f = Ec + E * Vec2(std::cos(omega * t), std::cos(omega * t + phi)) +
                 Vec2(v.y, -v.x) * (Hc + H * std::cos(omega * t));
@@ -189,15 +188,13 @@ int main(int argc, char const *argv[])
         datas[i].power /= s;
         datas[i].tau = all_time / (datas[i].acoustic_phonon_scattering_count + datas[i].optical_phonon_scattering_count + 1);
     }
-    /*
     if (dumping) {
-        FILE *fd = fopen("dump.bin", "wb");
+        FILE *fd = fopen(dumpname, "wb");
         fwrite(&n, sizeof(float), 1, fd);
         fwrite(&s, sizeof(float), 1, fd);
         fwrite(dump, sizeof(float), 2 * n * s, fd);
         fclose(fd);
     }
-    */
     /* statistics */
     float student_coeff = 3;
     Data m = mean(datas);

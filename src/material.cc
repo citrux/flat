@@ -64,22 +64,25 @@ Lower::Lower(float temperature, float _delta) : delta(_delta) {
     const float crit_momentum = delta * std::sqrt(2 - 4 * delta * delta / (gamma * gamma + 4 * delta * delta));
     const float max_energy = energy(max_momentum);
 
-    energy_samples = 10000;
+    energy_samples = 20000;
     momentum_precision = 1e-5;
 
     table = std::vector<BandScatteringEntry>(energy_samples);
-    for (int i = 0; i < energy_samples; ++i) {
+    table[0].energy = min_energy();
+    table[0].integrals.push_back({crit_momentum,
+                    2 * pi * crit_momentum / std::sqrt(0 + 1e-3)});
+    for (int i = 1; i < energy_samples; ++i) {
         float e = (min_energy() * (energy_samples - 1 - i) + max_energy * i) / (energy_samples - 1);
         table[i].energy = e;
         if (e < delta) {
             float p = bisection([this,e](float p){return energy(p) - e;}, 0, crit_momentum, momentum_precision);
             table[i].integrals.push_back({p,
-                    2 * pi * p / std::sqrt(std::pow(velocity(p), 2) + 1e-6)});
+                    2 * pi * p / std::sqrt(std::pow(velocity(p), 2) + 1e-3)});
         }
         if (e < max_energy) {
             float p = bisection([this,e](float p){return energy(p) - e;}, crit_momentum, max_momentum, momentum_precision);
             table[i].integrals.push_back({p,
-                    2 * pi * p / std::sqrt(std::pow(velocity(p), 2) + 1e-6)});
+                    2 * pi * p / std::sqrt(std::pow(velocity(p), 2) + 1e-3)});
         }
     }
 }
