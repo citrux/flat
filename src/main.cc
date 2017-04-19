@@ -2,6 +2,7 @@
 #include <ctime>
 #include <cstring>
 #include <iostream>
+#include <algorithm>
 #include <omp.h>
 #include "physics.hh"
 #include "material.hh"
@@ -22,12 +23,18 @@ void split(const std::string &s, char delim, Out result) {
     }
 }
 
-
 std::vector<std::string> split(const std::string &s, char delim) {
     std::vector<std::string> elems;
     split(s, delim, std::back_inserter(elems));
     return elems;
 }
+
+struct Wave {
+    Vec2 E;
+    float H;
+    float omega;
+    float phi;
+};
 
 int main(int argc, char const *argv[])
 {
@@ -44,16 +51,21 @@ int main(int argc, char const *argv[])
     Vec2 E, Ec;
     float H, Hc, omega, phi, T;
     int n;
+    int number_of_waves;
     float dt, all_time;
 
     /* input */
     std::cin >> material;
     std::cin >> Ec.x >> Ec.y;
     std::cin >> Hc;
-    std::cin >> E.x >> E.y;
-    std::cin >> H;
-    std::cin >> omega;
-    std::cin >> phi;
+    std::cin >> number_of_waves;
+    std::vector<Wave> waves(number_of_waves);
+    for (int i = 0; i < number_of_waves; i++) {
+        std::cin >> waves[i].E.x >> waves[i].E.y;
+        std::cin >> waves[i].H;
+        std::cin >> waves[i].omega;
+        std::cin >> waves[i].phi;
+    }
     std::cin >> T;
     std::cin >> n;
     std::cin >> dt;
@@ -75,10 +87,12 @@ int main(int argc, char const *argv[])
 
     const float field_dimensionless_factor = e * v_f * dt / eV;
     Ec *= field_dimensionless_factor;
-    E *= field_dimensionless_factor;
     Hc *= v_f / c * field_dimensionless_factor;
-    H *= v_f / c * field_dimensionless_factor;
-    omega *= dt;
+    for (auto & w: waves) {
+        w.E *= field_dimensionless_factor;
+        w.H *= v_f / c * field_dimensionless_factor;
+        w.omega *= dt;
+    }
 
     int s = all_time / dt;
 
@@ -124,6 +138,8 @@ int main(int argc, char const *argv[])
             float theta = 2 * pi * particle.rng.uniform();
             particle.p = {p * std::cos(theta), p * std::sin(theta)};
         } while (exp(-(particle.band->energy(particle.p) - particle.band->min_energy()) / k / T) < prob);
+        datas[i].power.assign(number_of_waves + 1, 0);
+        datas[i].population.assign(bands.size(), 0);
 
         /* simulation */
         for (int t = 0; t < s; ++t) {
@@ -132,8 +148,12 @@ int main(int argc, char const *argv[])
                 dump[2 * t * n + 2 * i + 1] = particle.p.y;
             }
             Vec2 v = particle.band->velocity(particle.p);
-            Vec2 f = Ec + E * Vec2(std::cos(omega * t), std::cos(omega * t + phi)) +
-                Vec2(v.y, -v.x) * (Hc + H * std::cos(omega * t));
+            Vec2 f = Ec + Vec2(v.y, -v.x) * Hc;
+            for (auto w: waves) {
+                f += w.E * Vec2(std::cos(w.omega * t),
+                                std::cos(w.omega * t + w.phi)) +
+                     Vec2(v.y, -v.x) * w.H * std::cos(w.omega * t);
+            }
             if (std::isnan(f.x) || std::isnan(f.y)) {
                 puts("force is nan!");
                 printf("%e %e\n", f.x, f.y);
@@ -148,8 +168,18 @@ int main(int argc, char const *argv[])
                 printf("%e %e\n", particle.p.x, particle.p.y);
                 exit(1);
             }
+            int band_index = std::find(bands.begin(), bands.end(), particle.band) - bands.begin();
+            datas[i].population[band_index] += 1;
             datas[i].v += v;
-            datas[i].power += v.dot(E * Vec2(cos(omega * t), cos(omega * t + phi)));
+            datas[i].power[0] += v.dot(Ec);
+            for (int j = 0; j < number_of_waves; j++) {
+                const float Ex = waves[j].E.x;
+                const float Ey = waves[j].E.y;
+                const float omega = waves[j].omega;
+                const float phi = waves[j].phi;
+                Vec2 E = { Ex*std::cos(omega*t), Ey*std::cos(omega*t+phi) };
+                datas[i].power[j+1] += v.dot(E);
+            }
             particle.p += f;
             float wsum = 0;
             for (auto const band: bands) {
@@ -206,7 +236,10 @@ int main(int argc, char const *argv[])
     /* output (stdout) */
     printf("v_x = %e +/- %e\n", m.v.x, sd.v.x);
     printf("v_y = %e +/- %e\n", m.v.y, sd.v.y);
-    printf("power = %e +/- %e\n", m.power, sd.power);
+    printf("power:\n\tstatic = %e +/- %e\n", m.power[0], sd.power[0]);
+    for (int i = 0; i < number_of_waves; i++) {
+        printf("\twave %d = %e +/- %e\n", i, m.power[i+1], sd.power[i+1]);
+    }
     printf("tau = %e +/- %e\n", m.tau, sd.tau);
     printf("acoustic = %d +/- %d\n", m.acoustic_phonon_scattering_count, sd.acoustic_phonon_scattering_count);
     printf("optical = %d +/- %d\n", m.optical_phonon_scattering_count, sd.optical_phonon_scattering_count);
