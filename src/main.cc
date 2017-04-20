@@ -28,14 +28,6 @@ std::vector<std::string> split(const std::string &s, char delim) {
     split(s, delim, std::back_inserter(elems));
     return elems;
 }
-
-struct Wave {
-    Vec2 E;
-    float H;
-    float omega;
-    float phi;
-};
-
 int main(int argc, char const *argv[])
 {
     bool dumping = false;
@@ -104,31 +96,29 @@ int main(int argc, char const *argv[])
     for (int i = 0; i < n; ++i) {
         seeds[i] = rand();
     }
-    std::vector<Band*> bands;
+    Material *mat;
     if (material_name == "bigraphene") {
         float delta = 0;
+        int number_of_bands = 1;
         if (material_params.size() > 1) {
             delta = atof(material_params[1].c_str());
         }
-        Bigraphene::Lower *lower = new Bigraphene::Lower(T, delta);
-        bands = {lower};
         if (material_params.size() > 2) {
-            Bigraphene::Upper *upper = new Bigraphene::Upper(T);
-            bands.push_back(upper);
+            number_of_bands = atoi(material_params[2].c_str());
         }
+        mat = new Bigraphene(T, delta, number_of_bands);
     } else {
         float delta = 0;
         if (material_params.size() > 1) {
             delta = atof(material_params[1].c_str());
         }
-        Graphene::Bnd *band = new Graphene::Bnd(T, delta);
-        bands = {band};
+        mat = new Graphene(T, delta);
     }
     puts("start calculation");
     #pragma omp parallel for
     for (int i = 0; i < n; ++i) {
         Particle particle(seeds[i]);
-        particle.band = bands[0];
+        particle.band = mat->bands[0];
         particle.p = {0, 0};
         /* Boltzmann-distributed initial condition */
         float prob;
@@ -139,7 +129,7 @@ int main(int argc, char const *argv[])
             particle.p = {p * std::cos(theta), p * std::sin(theta)};
         } while (exp(-(particle.band->energy(particle.p) - particle.band->min_energy()) / k / T) < prob);
         datas[i].power.assign(number_of_waves + 1, 0);
-        datas[i].population.assign(bands.size(), 0);
+        datas[i].population.assign(mat->bands.size(), 0);
 
         /* simulation */
         for (int t = 0; t < s; ++t) {
@@ -168,7 +158,7 @@ int main(int argc, char const *argv[])
                 printf("%e %e\n", particle.p.x, particle.p.y);
                 exit(1);
             }
-            int band_index = std::find(bands.begin(), bands.end(), particle.band) - bands.begin();
+            int band_index = std::find(mat->bands.begin(), mat->bands.end(), particle.band) - mat->bands.begin();
             datas[i].population[band_index] += 1;
             datas[i].v += v;
             datas[i].power[0] += v.dot(Ec);
@@ -182,7 +172,7 @@ int main(int argc, char const *argv[])
             }
             particle.p += f;
             float wsum = 0;
-            for (auto const band: bands) {
+            for (auto const band: mat->bands) {
                 for (auto const & result: band->acoustic_phonon_scattering(particle))
                     wsum += result.rate;
                 for (auto const & result: band->optical_phonon_scattering(particle))
@@ -191,7 +181,7 @@ int main(int argc, char const *argv[])
             particle.r -= wsum * dt;
             if (particle.r < 0) {
                 float w = particle.rng.uniform() * wsum;
-                for (auto const band: bands) {
+                for (auto const band: mat->bands) {
                     for (auto const & result: band->acoustic_phonon_scattering(particle)) {
                         w -= result.rate;
                         if (w < 0) {
@@ -219,6 +209,7 @@ int main(int argc, char const *argv[])
         }
         datas[i].v /= s;
         datas[i].power /= s;
+        datas[i].population /= s;
         datas[i].tau = all_time / (datas[i].acoustic_phonon_scattering_count + datas[i].optical_phonon_scattering_count + 1);
     }
     if (dumping) {
@@ -243,5 +234,9 @@ int main(int argc, char const *argv[])
     printf("tau = %e +/- %e\n", m.tau, sd.tau);
     printf("acoustic = %d +/- %d\n", m.acoustic_phonon_scattering_count, sd.acoustic_phonon_scattering_count);
     printf("optical = %d +/- %d\n", m.optical_phonon_scattering_count, sd.optical_phonon_scattering_count);
+    printf("population:\n");
+    for (int i = 0; i < number_of_waves; i++) {
+        printf("\tband %d = %e +/- %e\n", i, m.population[i], sd.population[i]);
+    }
     return 0;
 }

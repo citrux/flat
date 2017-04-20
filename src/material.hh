@@ -6,7 +6,14 @@
 #include <vector>
 #include <string>
 
-struct Band;
+struct Wave {
+    Vec2 E;
+    float H;
+    float omega;
+    float phi;
+};
+
+class Band;
 
 struct Particle {
     Vec2 p;
@@ -44,77 +51,33 @@ public:
     Vec2 momentum_scattering(float momentum, Particle & p);
 };
 
-namespace Bigraphene {
-class Lower : public Band {
+class Material {
 public:
-    const float gamma = 0.35;
-    const float delta;
-
-    const float optical_phonon_energy = 0.196;
-    float acoustic_phonon_constant;
-    float optical_phonon_constant;
-
-    std::vector<BandScatteringEntry> table;
-    int energy_samples;
-    int momentum_samples;
-    float momentum_precision;
-
-    float min_energy() const;
-    float energy(float momentum) const;
-    float energy(Vec2 const & momentum) const;
-    float velocity(float momentum) const;
-    Vec2 velocity(Vec2 const & momentum) const;
-    std::list<ScatteringResult> acoustic_phonon_scattering(Particle & p);
-    std::list<ScatteringResult> optical_phonon_scattering(Particle & p);
-
-    Lower(float temperature, float delta=0);
-    ~Lower() {};
+    std::vector<Band*> bands;
+    //virtual float vertical_transition(int from, int to, Wave const & wave) = 0;
 };
-class Upper : public Band {
+
+class Bigraphene : public Material {
 public:
-    const float gamma = 0.35;
-    const float delta;
-
-    const float optical_phonon_energy = 0.196;
-    float acoustic_phonon_constant;
-    float optical_phonon_constant;
-
-    std::vector<BandScatteringEntry> table;
-    int energy_samples;
-    int momentum_samples;
-    float momentum_precision;
-
-    float min_energy() const;
-    float energy(float momentum) const;
-    float energy(Vec2 const & momentum) const;
-    float velocity(float momentum) const;
-    Vec2 velocity(Vec2 const & momentum) const;
-    std::list<ScatteringResult> acoustic_phonon_scattering(Particle & p);
-    std::list<ScatteringResult> optical_phonon_scattering(Particle & p);
-
-    Upper(float temperature, float delta=0);
-    ~Upper() {};
-};
+    Bigraphene(float temperature, float delta, float number_of_bands);
 };
 
-namespace Graphene {
-class Bnd : public Band {
+class Graphene : public Material {
 public:
-    const float delta;
-
-    const float optical_phonon_energy = 0.196;
-    float acoustic_phonon_constant;
-    float optical_phonon_constant;
-
-    float min_energy() const;
-    float energy(float momentum) const;
-    float energy(Vec2 const & momentum) const;
-    float velocity(float momentum) const;
-    Vec2 velocity(Vec2 const & momentum) const;
-    std::list<ScatteringResult> acoustic_phonon_scattering(Particle & p);
-    std::list<ScatteringResult> optical_phonon_scattering(Particle & p);
-
-    Bnd(float temperature, float delta=0.13);
-    ~Bnd() {};
+    Graphene(float temperature, float delta);
 };
+
+template <typename T>
+inline float bisection(T f, float xmin, float xmax, float precision) {
+    while (xmax - xmin > precision) {
+        float x = (xmax + xmin) / 2;
+        if (f(x) * f(xmin) <= 0) {
+            xmax = x;
+        } else {
+            xmin = x;
+        }
+    }
+    return (xmax + xmin) / 2;
 }
+
+
