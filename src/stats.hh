@@ -11,6 +11,7 @@ struct Data
 
     int acoustic_phonon_scattering_count;
     int optical_phonon_scattering_count;
+    int vertical_transitions_count;
 
     float tau;
     std::vector<float> population;
@@ -19,7 +20,8 @@ struct Data
         power(0),
         tau(0),
         acoustic_phonon_scattering_count(0),
-        optical_phonon_scattering_count(0) {};
+        optical_phonon_scattering_count(0),
+        vertical_transitions_count(0) {};
 };
 
 std::vector<float> & operator+=(std::vector<float> & lhs, std::vector<float> const & rhs) {
@@ -84,6 +86,7 @@ inline Data & operator+=(Data & lhs, const Data & rhs) {
     lhs.power += rhs.power;
     lhs.acoustic_phonon_scattering_count += rhs.acoustic_phonon_scattering_count;
     lhs.optical_phonon_scattering_count += rhs.optical_phonon_scattering_count;
+    lhs.vertical_transitions_count += rhs.vertical_transitions_count;
     lhs.population += rhs.population;
     return lhs;
 }
@@ -94,6 +97,7 @@ inline Data & operator-=(Data & lhs, const Data & rhs) {
     lhs.power -= rhs.power;
     lhs.acoustic_phonon_scattering_count -= rhs.acoustic_phonon_scattering_count;
     lhs.optical_phonon_scattering_count -= rhs.optical_phonon_scattering_count;
+    lhs.vertical_transitions_count -= rhs.vertical_transitions_count;
     lhs.population -= rhs.population;
     return lhs;
 }
@@ -104,6 +108,7 @@ inline Data & operator*=(Data & lhs, const Data & rhs) {
     lhs.power *= rhs.power;
     lhs.acoustic_phonon_scattering_count *= rhs.acoustic_phonon_scattering_count;
     lhs.optical_phonon_scattering_count *= rhs.optical_phonon_scattering_count;
+    lhs.vertical_transitions_count *= rhs.vertical_transitions_count;
     lhs.population *= rhs.population;
     return lhs;
 }
@@ -115,6 +120,7 @@ inline Data & operator*=(Data & lhs, T rhs) {
     lhs.power *= rhs;
     lhs.acoustic_phonon_scattering_count *= rhs;
     lhs.optical_phonon_scattering_count *= rhs;
+    lhs.vertical_transitions_count *= rhs;
     lhs.population *= rhs;
     return lhs;
 }
@@ -126,6 +132,7 @@ inline Data & operator/=(Data & lhs, T rhs) {
     lhs.power /= rhs;
     lhs.acoustic_phonon_scattering_count /= rhs;
     lhs.optical_phonon_scattering_count /= rhs;
+    lhs.vertical_transitions_count /= rhs;
     lhs.population /= rhs;
     return lhs;
 }
@@ -136,6 +143,7 @@ inline Data sqrt(Data d) {
     d.tau = (d.tau > 0) ? sqrt(d.tau) : 0;
     d.acoustic_phonon_scattering_count = (d.acoustic_phonon_scattering_count > 0) ? sqrt(d.acoustic_phonon_scattering_count) : 0;
     d.optical_phonon_scattering_count = (d.optical_phonon_scattering_count > 0) ? sqrt(d.optical_phonon_scattering_count) : 0;
+    d.vertical_transitions_count = (d.vertical_transitions_count > 0) ? sqrt(d.vertical_transitions_count) : 0;
     d.population = (d.population > 0) ? sqrt(d.population) : std::vector<float>(d.population.size(), 0);
     return d;
 }

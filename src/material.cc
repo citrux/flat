@@ -1,4 +1,3 @@
-#include <cmath>
 #include "material.hh"
 #include "physics.hh"
 #include <cstdio>

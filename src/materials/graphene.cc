@@ -1,6 +1,7 @@
 #include "../material.hh"
 #include "../physics.hh"
 
+namespace materials {
 const float rho = 7.7e-8;
 const float Dak = 18;
 const float Dopt = 1.4e9;
@@ -80,4 +81,5 @@ std::list<ScatteringResult> Bnd::optical_phonon_scattering(Particle & p) {
         result.push_back({momentum, optical_phonon_constant * 2 * pi * momentum / velocity(momentum)});
     }
     return result;
+}
 }

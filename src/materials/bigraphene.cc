@@ -1,12 +1,14 @@
 #include "../material.hh"
 #include "../physics.hh"
 
+namespace materials {
+const float gamma = 0.35;
+const float optical_phonon_energy = 0.196;
+
 class Lower : public Band {
 public:
-    const float gamma = 0.35;
     const float delta;
 
-    const float optical_phonon_energy = 0.196;
     float acoustic_phonon_constant;
     float optical_phonon_constant;
 
@@ -29,10 +31,8 @@ public:
 
 class Upper : public Band {
 public:
-    const float gamma = 0.35;
     const float delta;
 
-    const float optical_phonon_energy = 0.196;
     float acoustic_phonon_constant;
     float optical_phonon_constant;
 
@@ -53,13 +53,32 @@ public:
     ~Upper() {};
 };
 
-Bigraphene::Bigraphene(float temperature, float delta, float number_of_bands) {
+Bigraphene::Bigraphene(float temperature, float delta, float number_of_bands) : delta(delta) {
     Lower *lower = new Lower(temperature, delta);
     bands = {lower};
     if (number_of_bands > 2) {
         Upper *upper = new Upper(temperature, delta);
         bands.push_back(upper);
     }
+}
+
+
+float Bigraphene::vertical_transition(Particle & p, Band *from, Band *to, Wave const & wave) {
+    if (from == to) { return 0; }
+    float e1 = from->energy(p.p);
+    float e2 = to->energy(p.p);
+    float d = delta;
+    float p2 = p.p.dot(p.p);
+    float g = 0.35;
+    float g2 = g * g;
+    float xi = 1;
+    float theta = std::atan2(p.p.y, p.p.x);
+    float lambda = (std::pow(d + e1, 2) - p2) * (std::pow(d + e2, 2) - p2) / g2;
+    float numerator = std::pow(e1 * e1 - d * d + lambda, 2) * (wave.E.x * wave.E.x + wave.E.y * wave.E.y - 2 * xi * wave.E.x * wave.E.y * std::sin(wave.phi)) +
+        std::pow(e1 - d, 2) / (e2 - d) * std::pow(e2 * e2 - d * d + lambda, 2) * (wave.E.x * wave.E.x + wave.E.y * wave.E.y + 2 * xi * wave.E.x * wave.E.y * std::sin(wave.phi)) +
+        2 * (e1 - d) / (e2 - d) * (e1 * e1 - d * d + lambda) * (e2 * e2 - d * d + lambda) * ((wave.E.x * wave.E.x - wave.E.y * wave.E.y) * std::cos(2 * theta) + 2 * wave.E.x * wave.E.y * std::sin(2 * theta));
+    float denomenator = std::pow(wave.omega, 2) * std::pow(g, -4) * (g * g * p2 * std::pow(p2 - 4 * d * d, 2) * std::pow(e1 + d, -2) * std::pow(e2 * e2 - d * d, -2) * (std::pow(d + e1, 2) + p2) + (1 + p2 * std::pow(p2 - 4 * d * d, 2) * std::pow(e1 + d, -2) * std::pow(e2 * e2 - d * d, -2)) * std::pow(std::pow(e1 + d,2) - p2, 2)) * (g * g * (std::pow(e2 + d, 2) + p2) + (1 + p2 * std::pow(e2 - d, -2)) * std::pow(std::pow(e2 + d, 2) - p2, 2));
+    return pi / 8 / hbar * numerator / denomenator * dirac_delta(e2 - e1 - hbar * wave.omega, 0);
 }
 
 const float rho = 2 * 7.7e-8;
@@ -252,4 +271,5 @@ std::list<ScatteringResult> Upper::optical_phonon_scattering(Particle & p) {
         result.push_back({momentum, optical_phonon_constant * 2 * pi * momentum});
     }
     return result;
+}
 }

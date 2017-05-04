@@ -54,18 +54,24 @@ public:
 class Material {
 public:
     std::vector<Band*> bands;
-    //virtual float vertical_transition(int from, int to, Wave const & wave) = 0;
+    virtual float vertical_transition(Particle & p, Band *from, Band *to, Wave const & wave) = 0;
 };
 
-class Bigraphene : public Material {
-public:
-    Bigraphene(float temperature, float delta, float number_of_bands);
-};
+namespace materials {
 
-class Graphene : public Material {
-public:
-    Graphene(float temperature, float delta);
-};
+    class Bigraphene : public Material {
+    public:
+        float delta;
+        Bigraphene(float temperature, float delta, float number_of_bands);
+        float vertical_transition(Particle & p, Band *from, Band *to, Wave const & wave);
+    };
+
+    class Graphene : public Material {
+    public:
+        Graphene(float temperature, float delta);
+        float vertical_transition(Particle & p, Band *from, Band *to, Wave const & wave) { return 0; };
+    };
+}
 
 template <typename T>
 inline float bisection(T f, float xmin, float xmax, float precision) {

@@ -1,4 +1,5 @@
 #pragma once
+#include <limits>
 #include <cmath>
 
 /*
@@ -19,6 +20,9 @@ const float pi = 3.14159265f;
 */
 inline float sqr(float x) { return x * x; };
 inline float dirac_delta(float x, float width) {
+    if (width == 0)
+        return (x == 0) ? std::numeric_limits<float>::infinity() : 0;
+
     float sigma = width / 2;
     return 1.0 / sqrt(2 * pi) / sigma * exp(- sqr(x / sigma) / 2);
 }

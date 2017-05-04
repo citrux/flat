@@ -106,13 +106,13 @@ int main(int argc, char const *argv[])
         if (material_params.size() > 2) {
             number_of_bands = atoi(material_params[2].c_str());
         }
-        mat = new Bigraphene(T, delta, number_of_bands);
+        mat = new materials::Bigraphene(T, delta, number_of_bands);
     } else {
         float delta = 0;
         if (material_params.size() > 1) {
             delta = atof(material_params[1].c_str());
         }
-        mat = new Graphene(T, delta);
+        mat = new materials::Graphene(T, delta);
     }
     puts("start calculation");
     #pragma omp parallel for
@@ -177,6 +177,9 @@ int main(int argc, char const *argv[])
                     wsum += result.rate;
                 for (auto const & result: band->optical_phonon_scattering(particle))
                     wsum += result.rate;
+                for (auto const dest_band: mat->bands)
+                    for (auto const & wave: waves)
+                        wsum += mat->vertical_transition(particle, band, dest_band, wave);
             }
             particle.r -= wsum * dt;
             if (particle.r < 0) {
@@ -202,6 +205,15 @@ int main(int argc, char const *argv[])
                             goto end;
                         }
                     }
+                for (auto const dest_band: mat->bands)
+                    for (auto const & wave: waves)
+                        w -= mat->vertical_transition(particle, band, dest_band, wave);
+                        if (w < 0) {
+                            ++datas[i].vertical_transitions_count;
+                            particle.reset_r();
+                            particle.band = band;
+                            goto end;
+                        }
                 }
             }
             end:
