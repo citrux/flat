@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 project(flat)
 add_subdirectory(tests)
 
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb")
 find_package(OpenMP)
 if (OPENMP_FOUND)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")

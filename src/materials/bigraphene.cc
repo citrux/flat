@@ -56,7 +56,7 @@ public:
 Bigraphene::Bigraphene(float temperature, float delta, float number_of_bands) : delta(delta) {
     Lower *lower = new Lower(temperature, delta);
     bands = {lower};
-    if (number_of_bands > 2) {
+    if (number_of_bands > 1) {
         Upper *upper = new Upper(temperature, delta);
         bands.push_back(upper);
     }
@@ -71,7 +71,7 @@ float Bigraphene::vertical_transition(Particle & p, Band *from, Band *to, Wave c
     float p2 = p.p.dot(p.p);
     float g = 0.35;
     float g2 = g * g;
-    float xi = 1;
+    float xi = 1; // fix it!!!
     float theta = std::atan2(p.p.y, p.p.x);
     float lambda = (std::pow(d + e1, 2) - p2) * (std::pow(d + e2, 2) - p2) / g2;
     float numerator = std::pow(e1 * e1 - d * d + lambda, 2) * (wave.E.x * wave.E.x + wave.E.y * wave.E.y - 2 * xi * wave.E.x * wave.E.y * std::sin(wave.phi)) +

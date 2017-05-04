@@ -28,6 +28,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
     split(s, delim, std::back_inserter(elems));
     return elems;
 }
+
 int main(int argc, char const *argv[])
 {
     bool dumping = false;
@@ -39,6 +40,7 @@ int main(int argc, char const *argv[])
                 strcpy(dumpname, argv[i+1]);
         }
     }
+
     std::string material, material_name;
     Vec2 E, Ec;
     float H, Hc, omega, phi, T;
@@ -88,7 +90,6 @@ int main(int argc, char const *argv[])
 
     int s = all_time / dt;
 
-    std::vector<Data> datas(n);
     std::vector<unsigned int> seeds(n);
     float* dump;
     if (dumping) { dump = new float[2 * n * s]; }
@@ -114,6 +115,7 @@ int main(int argc, char const *argv[])
         }
         mat = new materials::Graphene(T, delta);
     }
+    std::vector<Data> datas(n, Data(waves.size(), mat->bands.size()));
     puts("start calculation");
     #pragma omp parallel for
     for (int i = 0; i < n; ++i) {
@@ -247,7 +249,7 @@ int main(int argc, char const *argv[])
     printf("acoustic = %d +/- %d\n", m.acoustic_phonon_scattering_count, sd.acoustic_phonon_scattering_count);
     printf("optical = %d +/- %d\n", m.optical_phonon_scattering_count, sd.optical_phonon_scattering_count);
     printf("population:\n");
-    for (int i = 0; i < number_of_waves; i++) {
+    for (int i = 0; i < mat->bands.size(); i++) {
         printf("\tband %d = %e +/- %e\n", i, m.population[i], sd.population[i]);
     }
     return 0;

@@ -16,12 +16,15 @@ struct Data
     float tau;
     std::vector<float> population;
 
-    Data() : v(Vec2(0, 0)),
+    Data(int waves, int bands) : v(Vec2(0, 0)),
         power(0),
         tau(0),
         acoustic_phonon_scattering_count(0),
         optical_phonon_scattering_count(0),
-        vertical_transitions_count(0) {};
+        vertical_transitions_count(0) {
+            power = std::vector<float>(waves);
+            population = std::vector<float>(bands);
+        };
 };
 
 std::vector<float> & operator+=(std::vector<float> & lhs, std::vector<float> const & rhs) {
@@ -157,7 +160,8 @@ inline Data operator/(Data lhs, T rhs) {return lhs /= rhs;}
 
 template <typename T>
 inline T mean(std::vector<T> const & values) {
-    T res;
+    T res = values[0];
+    res -= values[0];
     for (T x: values) {
         res += x;
     }
@@ -166,7 +170,8 @@ inline T mean(std::vector<T> const & values) {
 
 template <typename T>
 inline T disp(std::vector<T> const & values) {
-    T res;
+    T res = values[0] * values[0];
+    res -= values[0] * values[0];
     for (T x: values) {
         res += x * x;
     }
