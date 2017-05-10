@@ -63,7 +63,7 @@ Bigraphene::Bigraphene(float temperature, float delta, float number_of_bands) : 
 }
 
 
-float Bigraphene::vertical_transition(Particle & p, Band *from, Band *to, Wave const & wave) {
+float Bigraphene::vertical_transition(Particle & p, Band *from, Band *to, Wave const & wave, float de) {
     if (from == to) { return 0; }
     float e1 = from->energy(p.p);
     float e2 = to->energy(p.p);
@@ -78,7 +78,7 @@ float Bigraphene::vertical_transition(Particle & p, Band *from, Band *to, Wave c
         std::pow(e1 - d, 2) / (e2 - d) * std::pow(e2 * e2 - d * d + lambda, 2) * (wave.E.x * wave.E.x + wave.E.y * wave.E.y + 2 * xi * wave.E.x * wave.E.y * std::sin(wave.phi)) +
         2 * (e1 - d) / (e2 - d) * (e1 * e1 - d * d + lambda) * (e2 * e2 - d * d + lambda) * ((wave.E.x * wave.E.x - wave.E.y * wave.E.y) * std::cos(2 * theta) + 2 * wave.E.x * wave.E.y * std::sin(2 * theta));
     float denomenator = std::pow(wave.omega, 2) * std::pow(g, -4) * (g * g * p2 * std::pow(p2 - 4 * d * d, 2) * std::pow(e1 + d, -2) * std::pow(e2 * e2 - d * d, -2) * (std::pow(d + e1, 2) + p2) + (1 + p2 * std::pow(p2 - 4 * d * d, 2) * std::pow(e1 + d, -2) * std::pow(e2 * e2 - d * d, -2)) * std::pow(std::pow(e1 + d,2) - p2, 2)) * (g * g * (std::pow(e2 + d, 2) + p2) + (1 + p2 * std::pow(e2 - d, -2)) * std::pow(std::pow(e2 + d, 2) - p2, 2));
-    return pi / 8 / hbar * numerator / denomenator * dirac_delta(e2 - e1 - hbar * wave.omega, 0);
+    return pi / 8 / hbar * numerator / denomenator * dirac_delta(e2 - e1 - wave.photon_energy, de);
 }
 
 const float rho = 2 * 7.7e-8;

@@ -11,6 +11,7 @@ struct Wave {
     float H;
     float omega;
     float phi;
+    float photon_energy;
 };
 
 class Band;
@@ -54,7 +55,7 @@ public:
 class Material {
 public:
     std::vector<Band*> bands;
-    virtual float vertical_transition(Particle & p, Band *from, Band *to, Wave const & wave) = 0;
+    virtual float vertical_transition(Particle & p, Band *from, Band *to, Wave const & wave, float de) = 0;
 };
 
 namespace materials {
@@ -63,13 +64,13 @@ namespace materials {
     public:
         float delta;
         Bigraphene(float temperature, float delta, float number_of_bands);
-        float vertical_transition(Particle & p, Band *from, Band *to, Wave const & wave);
+        float vertical_transition(Particle & p, Band *from, Band *to, Wave const & wave, float de);
     };
 
     class Graphene : public Material {
     public:
         Graphene(float temperature, float delta);
-        float vertical_transition(Particle & p, Band *from, Band *to, Wave const & wave) { return 0; };
+        float vertical_transition(Particle & p, Band *from, Band *to, Wave const & wave, float de) { return 0; };
     };
 }
 

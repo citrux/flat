@@ -85,6 +85,7 @@ int main(int argc, char const *argv[])
     for (auto & w: waves) {
         w.E *= field_dimensionless_factor;
         w.H *= v_f / c * field_dimensionless_factor;
+        w.photon_energy = w.omega * hbar;
         w.omega *= dt;
     }
 
@@ -115,8 +116,55 @@ int main(int argc, char const *argv[])
         }
         mat = new materials::Graphene(T, delta);
     }
+    float de = 0;
     std::vector<Data> datas(n, Data(waves.size(), mat->bands.size()));
     puts("start calculation");
+    /* first run: just calculate tau for calculating de */
+    #pragma omp parallel for
+    for (int i = 0; i < n; ++i) {
+        Particle particle(seeds[i]);
+        particle.band = mat->bands[0];
+        particle.p = {0, 0};
+        /* Boltzmann-distributed initial condition */
+        float prob;
+        do {
+            float p = particle.rng.uniform();
+            prob = particle.rng.uniform();
+            float theta = 2 * pi * particle.rng.uniform();
+            particle.p = {p * std::cos(theta), p * std::sin(theta)};
+        } while (exp(-(particle.band->energy(particle.p) - particle.band->min_energy()) / k / T) < prob);
+        datas[i].power.assign(number_of_waves + 1, 0);
+        datas[i].population.assign(mat->bands.size(), 0);
+
+        /* simulation */
+        int t = 0;
+        while (particle.r > 0) {
+            Vec2 v = particle.band->velocity(particle.p);
+            Vec2 f = Ec + Vec2(v.y, -v.x) * Hc;
+            for (auto w: waves) {
+                f += w.E * Vec2(std::cos(w.omega * t),
+                                std::cos(w.omega * t + w.phi)) +
+                     Vec2(v.y, -v.x) * w.H * std::cos(w.omega * t);
+            }
+            int band_index = std::find(mat->bands.begin(), mat->bands.end(), particle.band) - mat->bands.begin();
+            particle.p += f;
+            float wsum = 0;
+            for (auto const band: mat->bands) {
+                for (auto const & result: band->acoustic_phonon_scattering(particle))
+                    wsum += result.rate;
+                for (auto const & result: band->optical_phonon_scattering(particle))
+                    wsum += result.rate;
+            }
+            particle.r -= wsum * dt;
+            ++t;
+        }
+        datas[i].tau = t * dt;
+    }
+
+    de = hbar / mean(datas).tau;
+    printf("first run: tau = %e s, de = %e eV\n", hbar/de, de);
+
+    /* second run */
     #pragma omp parallel for
     for (int i = 0; i < n; ++i) {
         Particle particle(seeds[i]);
@@ -181,7 +229,7 @@ int main(int argc, char const *argv[])
                     wsum += result.rate;
                 for (auto const dest_band: mat->bands)
                     for (auto const & wave: waves)
-                        wsum += mat->vertical_transition(particle, band, dest_band, wave);
+                        wsum += mat->vertical_transition(particle, band, dest_band, wave, de);
             }
             particle.r -= wsum * dt;
             if (particle.r < 0) {
@@ -209,7 +257,7 @@ int main(int argc, char const *argv[])
                     }
                 for (auto const dest_band: mat->bands)
                     for (auto const & wave: waves)
-                        w -= mat->vertical_transition(particle, band, dest_band, wave);
+                        w -= mat->vertical_transition(particle, band, dest_band, wave, de);
                         if (w < 0) {
                             ++datas[i].vertical_transitions_count;
                             particle.reset_r();
@@ -248,6 +296,7 @@ int main(int argc, char const *argv[])
     printf("tau = %e +/- %e\n", m.tau, sd.tau);
     printf("acoustic = %d +/- %d\n", m.acoustic_phonon_scattering_count, sd.acoustic_phonon_scattering_count);
     printf("optical = %d +/- %d\n", m.optical_phonon_scattering_count, sd.optical_phonon_scattering_count);
+    printf("vertical = %d +/- %d\n", m.vertical_transitions_count, sd.vertical_transitions_count);
     printf("population:\n");
     for (int i = 0; i < mat->bands.size(); i++) {
         printf("\tband %d = %e +/- %e\n", i, m.population[i], sd.population[i]);
