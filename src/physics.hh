@@ -19,10 +19,10 @@ const float pi = 3.14159265f;
 * ## Needed mathematical functions
 */
 inline float sqr(float x) { return x * x; };
-inline float dirac_delta(float x, float width) {
-    if (width == 0)
+inline float dirac_delta(float x, float half_width) {
+    if (half_width == 0)
         return (x == 0) ? std::numeric_limits<float>::infinity() : 0;
 
-    float sigma = width / 2;
+    float sigma = half_width;
     return 1.0 / sqrt(2 * pi) / sigma * exp(- sqr(x / sigma) / 2);
 }

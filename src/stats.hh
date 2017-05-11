@@ -141,13 +141,13 @@ inline Data & operator/=(Data & lhs, T rhs) {
 }
 
 inline Data sqrt(Data d) {
-    d.v = (d.v.x > 0 && d.v.y > 0) ? Vec2(sqrt(d.v.x), sqrt(d.v.y)) : Vec2(0, 0);
-    d.power = (d.power > 0) ? sqrt(d.power) : std::vector<float>(d.power.size(), 0);
-    d.tau = (d.tau > 0) ? sqrt(d.tau) : 0;
-    d.acoustic_phonon_scattering_count = (d.acoustic_phonon_scattering_count > 0) ? sqrt(d.acoustic_phonon_scattering_count) : 0;
-    d.optical_phonon_scattering_count = (d.optical_phonon_scattering_count > 0) ? sqrt(d.optical_phonon_scattering_count) : 0;
-    d.vertical_transitions_count = (d.vertical_transitions_count > 0) ? sqrt(d.vertical_transitions_count) : 0;
-    d.population = (d.population > 0) ? sqrt(d.population) : std::vector<float>(d.population.size(), 0);
+    d.v = Vec2(sqrt(d.v.x), sqrt(d.v.y));
+    d.power = sqrt(d.power);
+    d.tau = sqrt(d.tau);
+    d.acoustic_phonon_scattering_count = sqrt(d.acoustic_phonon_scattering_count);
+    d.optical_phonon_scattering_count =  sqrt(d.optical_phonon_scattering_count);
+    d.vertical_transitions_count = sqrt(d.vertical_transitions_count);
+    d.population = sqrt(d.population);
     return d;
 }
 

@@ -122,32 +122,32 @@ int main(int argc, char const *argv[])
     /* first run: just calculate tau for calculating de */
     #pragma omp parallel for
     for (int i = 0; i < n; ++i) {
-        Particle particle(seeds[i]);
-        particle.band = mat->bands[0];
-        particle.p = {0, 0};
+        Particle *particle = mat->create_particle(seeds[i]);
+        particle->band = mat->bands[0];
+        particle->p = {0, 0};
         /* Boltzmann-distributed initial condition */
         float prob;
         do {
-            float p = particle.rng.uniform();
-            prob = particle.rng.uniform();
-            float theta = 2 * pi * particle.rng.uniform();
-            particle.p = {p * std::cos(theta), p * std::sin(theta)};
-        } while (exp(-(particle.band->energy(particle.p) - particle.band->min_energy()) / k / T) < prob);
+            float p = particle->rng.uniform();
+            prob = particle->rng.uniform();
+            float theta = 2 * pi * particle->rng.uniform();
+            particle->p = {p * std::cos(theta), p * std::sin(theta)};
+        } while (exp(-(particle->band->energy(particle->p) - particle->band->min_energy()) / k / T) < prob);
         datas[i].power.assign(number_of_waves + 1, 0);
         datas[i].population.assign(mat->bands.size(), 0);
 
         /* simulation */
         int t = 0;
-        while (particle.r > 0) {
-            Vec2 v = particle.band->velocity(particle.p);
+        while (particle->r > 0 && t < s) {
+            Vec2 v = particle->band->velocity(particle->p);
             Vec2 f = Ec + Vec2(v.y, -v.x) * Hc;
             for (auto w: waves) {
                 f += w.E * Vec2(std::cos(w.omega * t),
                                 std::cos(w.omega * t + w.phi)) +
                      Vec2(v.y, -v.x) * w.H * std::cos(w.omega * t);
             }
-            int band_index = std::find(mat->bands.begin(), mat->bands.end(), particle.band) - mat->bands.begin();
-            particle.p += f;
+            int band_index = std::find(mat->bands.begin(), mat->bands.end(), particle->band) - mat->bands.begin();
+            particle->p += f;
             float wsum = 0;
             for (auto const band: mat->bands) {
                 for (auto const & result: band->acoustic_phonon_scattering(particle))
@@ -155,7 +155,7 @@ int main(int argc, char const *argv[])
                 for (auto const & result: band->optical_phonon_scattering(particle))
                     wsum += result.rate;
             }
-            particle.r -= wsum * dt;
+            particle->r -= wsum * dt;
             ++t;
         }
         datas[i].tau = t * dt;
@@ -167,27 +167,27 @@ int main(int argc, char const *argv[])
     /* second run */
     #pragma omp parallel for
     for (int i = 0; i < n; ++i) {
-        Particle particle(seeds[i]);
-        particle.band = mat->bands[0];
-        particle.p = {0, 0};
+        Particle *particle = mat->create_particle(seeds[i]);
+        particle->band = mat->bands[0];
+        particle->p = {0, 0};
         /* Boltzmann-distributed initial condition */
         float prob;
         do {
-            float p = particle.rng.uniform();
-            prob = particle.rng.uniform();
-            float theta = 2 * pi * particle.rng.uniform();
-            particle.p = {p * std::cos(theta), p * std::sin(theta)};
-        } while (exp(-(particle.band->energy(particle.p) - particle.band->min_energy()) / k / T) < prob);
+            float p = particle->rng.uniform();
+            prob = particle->rng.uniform();
+            float theta = 2 * pi * particle->rng.uniform();
+            particle->p = {p * std::cos(theta), p * std::sin(theta)};
+        } while (exp(-(particle->band->energy(particle->p) - particle->band->min_energy()) / k / T) < prob);
         datas[i].power.assign(number_of_waves + 1, 0);
         datas[i].population.assign(mat->bands.size(), 0);
 
         /* simulation */
         for (int t = 0; t < s; ++t) {
             if (dumping) {
-                dump[2 * t * n + 2 * i] = particle.p.x;
-                dump[2 * t * n + 2 * i + 1] = particle.p.y;
+                dump[2 * t * n + 2 * i] = particle->p.x;
+                dump[2 * t * n + 2 * i + 1] = particle->p.y;
             }
-            Vec2 v = particle.band->velocity(particle.p);
+            Vec2 v = particle->band->velocity(particle->p);
             Vec2 f = Ec + Vec2(v.y, -v.x) * Hc;
             for (auto w: waves) {
                 f += w.E * Vec2(std::cos(w.omega * t),
@@ -198,17 +198,17 @@ int main(int argc, char const *argv[])
                 puts("force is nan!");
                 printf("%e %e\n", f.x, f.y);
                 printf("%e %e\n", v.x, v.y);
-                printf("%e %e\n", particle.p.x, particle.p.y);
-                printf("%e\n", particle.band->energy(particle.p));
+                printf("%e %e\n", particle->p.x, particle->p.y);
+                printf("%e\n", particle->band->energy(particle->p));
                 exit(1);
             }
             if (std::isnan(v.x) || std::isnan(v.y)) {
                 puts("wtf");
                 printf("%e %e\n", v.x, v.y);
-                printf("%e %e\n", particle.p.x, particle.p.y);
+                printf("%e %e\n", particle->p.x, particle->p.y);
                 exit(1);
             }
-            int band_index = std::find(mat->bands.begin(), mat->bands.end(), particle.band) - mat->bands.begin();
+            int band_index = std::find(mat->bands.begin(), mat->bands.end(), particle->band) - mat->bands.begin();
             datas[i].population[band_index] += 1;
             datas[i].v += v;
             datas[i].power[0] += v.dot(Ec);
@@ -220,7 +220,7 @@ int main(int argc, char const *argv[])
                 Vec2 E = { Ex*std::cos(omega*t), Ey*std::cos(omega*t+phi) };
                 datas[i].power[j+1] += v.dot(E);
             }
-            particle.p += f;
+            particle->p += f;
             float wsum = 0;
             for (auto const band: mat->bands) {
                 for (auto const & result: band->acoustic_phonon_scattering(particle))
@@ -228,20 +228,21 @@ int main(int argc, char const *argv[])
                 for (auto const & result: band->optical_phonon_scattering(particle))
                     wsum += result.rate;
                 for (auto const dest_band: mat->bands)
-                    for (auto const & wave: waves)
+                    for (auto const & wave: waves) {
                         wsum += mat->vertical_transition(particle, band, dest_band, wave, de);
+                    }
             }
-            particle.r -= wsum * dt;
-            if (particle.r < 0) {
-                float w = particle.rng.uniform() * wsum;
+            particle->r -= wsum * dt;
+            if (particle->r < 0) {
+                float w = particle->rng.uniform() * wsum;
                 for (auto const band: mat->bands) {
                     for (auto const & result: band->acoustic_phonon_scattering(particle)) {
                         w -= result.rate;
                         if (w < 0) {
                             ++datas[i].acoustic_phonon_scattering_count;
-                            particle.reset_r();
-                            particle.band = band;
-                            particle.p = band->momentum_scattering(result.momentum, particle);
+                            particle->reset_r();
+                            particle->band = band;
+                            particle->p = band->momentum_scattering(result.momentum, particle);
                             goto end;
                         }
                     }
@@ -249,9 +250,9 @@ int main(int argc, char const *argv[])
                         w -= result.rate;
                         if (w < 0) {
                             ++datas[i].optical_phonon_scattering_count;
-                            particle.reset_r();
-                            particle.band = band;
-                            particle.p = band->momentum_scattering(result.momentum, particle);
+                            particle->reset_r();
+                            particle->band = band;
+                            particle->p = band->momentum_scattering(result.momentum, particle);
                             goto end;
                         }
                     }
@@ -260,8 +261,8 @@ int main(int argc, char const *argv[])
                         w -= mat->vertical_transition(particle, band, dest_band, wave, de);
                         if (w < 0) {
                             ++datas[i].vertical_transitions_count;
-                            particle.reset_r();
-                            particle.band = band;
+                            particle->reset_r();
+                            particle->band = band;
                             goto end;
                         }
                 }
@@ -301,5 +302,24 @@ int main(int argc, char const *argv[])
     for (int i = 0; i < mat->bands.size(); i++) {
         printf("\tband %d = %e +/- %e\n", i, m.population[i], sd.population[i]);
     }
+
+    /* debug info */
+    FILE *f = fopen("tau.dat", "w");
+    for (auto & d: datas) {
+        fprintf(f, "%e\n", d.tau);
+    }
+    fclose(f);
+
+    f = fopen("acoustic.dat", "w");
+    for (auto & d: datas) {
+        fprintf(f, "%d\n", d.acoustic_phonon_scattering_count);
+    }
+    fclose(f);
+
+    f = fopen("optical.dat", "w");
+    for (auto & d: datas) {
+        fprintf(f, "%d\n", d.optical_phonon_scattering_count);
+    }
+    fclose(f);
     return 0;
 }

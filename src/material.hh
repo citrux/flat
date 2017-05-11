@@ -16,7 +16,8 @@ struct Wave {
 
 class Band;
 
-struct Particle {
+class Particle {
+public:
     Vec2 p;
     float r;
     Rng rng;
@@ -47,15 +48,16 @@ public:
     virtual float energy(Vec2 const & momentum) const = 0;
     virtual float velocity(float momentum) const = 0;
     virtual Vec2 velocity(Vec2 const & momentum) const = 0;
-    virtual std::list<ScatteringResult> acoustic_phonon_scattering(Particle & p) = 0;
-    virtual std::list<ScatteringResult> optical_phonon_scattering(Particle & p) = 0;
-    Vec2 momentum_scattering(float momentum, Particle & p);
+    virtual std::list<ScatteringResult> acoustic_phonon_scattering(Particle * p) = 0;
+    virtual std::list<ScatteringResult> optical_phonon_scattering(Particle * p) = 0;
+    Vec2 momentum_scattering(float momentum, Particle * p);
 };
 
 class Material {
 public:
     std::vector<Band*> bands;
-    virtual float vertical_transition(Particle & p, Band *from, Band *to, Wave const & wave, float de) = 0;
+    virtual Particle* create_particle(int seed) = 0;
+    virtual float vertical_transition(Particle * p, Band *from, Band *to, Wave const & wave, float de) = 0;
 };
 
 namespace materials {
@@ -64,13 +66,15 @@ namespace materials {
     public:
         float delta;
         Bigraphene(float temperature, float delta, float number_of_bands);
-        float vertical_transition(Particle & p, Band *from, Band *to, Wave const & wave, float de);
+        Particle* create_particle(int seed);
+        float vertical_transition(Particle * p, Band *from, Band *to, Wave const & wave, float de);
     };
 
     class Graphene : public Material {
     public:
         Graphene(float temperature, float delta);
-        float vertical_transition(Particle & p, Band *from, Band *to, Wave const & wave, float de) { return 0; };
+        Particle* create_particle(int seed);
+        float vertical_transition(Particle * p, Band *from, Band *to, Wave const & wave, float de) { return 0; };
     };
 }
 

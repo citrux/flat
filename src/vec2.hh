@@ -12,6 +12,11 @@ struct Vec2 {
     float len() const {
         return std::sqrt(this->dot(*this));
     }
+    Vec2 rotate(float angle) {
+        float s = std::sin(angle);
+        float c = std::cos(angle);
+        return {x * c - y * s, x * s + y * c};
+    }
 };
 
 inline bool operator==(Vec2 const & lhs, Vec2 const & rhs) {
@@ -72,3 +77,5 @@ template <typename T>
 inline Vec2 operator*(Vec2 lhs, T rhs) {return lhs *= rhs;}
 template <typename T>
 inline Vec2 operator/(Vec2 lhs, T rhs) {return lhs /= rhs;}
+
+inline Vec2 operator*(float lhs, Vec2 rhs) {return rhs *= lhs;}

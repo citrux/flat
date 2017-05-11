@@ -19,8 +19,8 @@ public:
     float energy(Vec2 const & momentum) const;
     float velocity(float momentum) const;
     Vec2 velocity(Vec2 const & momentum) const;
-    std::list<ScatteringResult> acoustic_phonon_scattering(Particle & p);
-    std::list<ScatteringResult> optical_phonon_scattering(Particle & p);
+    std::list<ScatteringResult> acoustic_phonon_scattering(Particle * p);
+    std::list<ScatteringResult> optical_phonon_scattering(Particle * p);
 
     Bnd(float temperature, float delta=0.13);
     ~Bnd() {};
@@ -31,6 +31,7 @@ Graphene::Graphene(float temperature, float delta) {
     bands = {band};
 }
 
+Particle* Graphene::create_particle(int seed) {return new Particle(seed);}
 
 Bnd::Bnd(float temperature, float _delta) : delta(_delta) {
     const float T = temperature;
@@ -63,8 +64,8 @@ Vec2 Bnd::velocity(Vec2 const & momentum) const {
     return momentum / nrg;
 }
 
-std::list<ScatteringResult> Bnd::acoustic_phonon_scattering(Particle & p) {
-    float e = p.band->energy(p.p);
+std::list<ScatteringResult> Bnd::acoustic_phonon_scattering(Particle * p) {
+    float e = p->band->energy(p->p);
     std::list<ScatteringResult> result;
     if (e > delta) {
         float momentum = std::sqrt(e * e - delta * delta);
@@ -73,8 +74,8 @@ std::list<ScatteringResult> Bnd::acoustic_phonon_scattering(Particle & p) {
     return result;
 }
 
-std::list<ScatteringResult> Bnd::optical_phonon_scattering(Particle & p) {
-    float e = p.band->energy(p.p) - optical_phonon_energy;
+std::list<ScatteringResult> Bnd::optical_phonon_scattering(Particle * p) {
+    float e = p->band->energy(p->p) - optical_phonon_energy;
     std::list<ScatteringResult> result;
     if (e > delta) {
         float momentum = std::sqrt(e * e - delta * delta);
