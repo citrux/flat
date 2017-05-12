@@ -32,6 +32,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
 int main(int argc, char const *argv[])
 {
     bool dumping = false;
+    bool verbose = false;
     char dumpname[256] = "dump.bin";
     for(int i = 1; i < argc; ++i) {
         if (!strcmp(argv[i], "-d")) {
@@ -39,11 +40,14 @@ int main(int argc, char const *argv[])
             if (i + 1 < argc)
                 strcpy(dumpname, argv[i+1]);
         }
+        if (!strcmp(argv[i], "-v")) {
+            verbose = true;
+        }
     }
 
     std::string material, material_name;
-    Vec2 E, Ec;
-    float H, Hc, omega, phi, T;
+    Vec2 Ec;
+    float Hc, T;
     int n;
     int number_of_waves;
     float dt, all_time;
@@ -68,16 +72,16 @@ int main(int argc, char const *argv[])
     auto material_params = split(material, '_');
     material_name = material_params[0];
 
-    printf("threads: %d\n", omp_get_num_threads());
     if (material_name != "bigraphene" && material_name != "graphene") {
         puts("incorrect material");
         exit(1);
     }
-    printf("Field configuration:\n");
-    printf("Ec: {%e, %e}\n", Ec.x, Ec.y);
-    printf("Hc: %e\n", Hc);
-    printf("E: {%e, %e}\n", E.x, E.y);
-    printf("H: %e\n", H);
+    if (verbose) {
+        printf("threads: %d\n", omp_get_num_threads());
+        printf("Field configuration:\n");
+        printf("Ec: {%e, %e}\n", Ec.x, Ec.y);
+        printf("Hc: %e\n", Hc);
+    }
 
     const float field_dimensionless_factor = e * v_f * dt / eV;
     Ec *= field_dimensionless_factor;
@@ -118,7 +122,7 @@ int main(int argc, char const *argv[])
     }
     float de = 0;
     std::vector<Data> datas(n, Data(waves.size(), mat->bands.size()));
-    puts("start calculation");
+    if (verbose) { puts("start calculation"); }
     /* first run: just calculate tau for calculating de */
     #pragma omp parallel for
     for (int i = 0; i < n; ++i) {
@@ -162,7 +166,7 @@ int main(int argc, char const *argv[])
     }
 
     de = hbar / mean(datas).tau;
-    printf("first run: tau = %e s, de = %e eV\n", hbar/de, de);
+    if (verbose) { printf("first run: tau = %e s, de = %e eV\n", hbar/de, de); }
 
     /* second run */
     #pragma omp parallel for
@@ -288,20 +292,27 @@ int main(int argc, char const *argv[])
     Data sd = stdev(datas) / (float)std::sqrt(n) * student_coeff;
 
     /* output (stdout) */
-    printf("v_x = %e +/- %e\n", m.v.x, sd.v.x);
-    printf("v_y = %e +/- %e\n", m.v.y, sd.v.y);
-    printf("power:\n\tstatic = %e +/- %e\n", m.power[0], sd.power[0]);
-    for (int i = 0; i < number_of_waves; i++) {
-        printf("\twave %d = %e +/- %e\n", i, m.power[i+1], sd.power[i+1]);
+    printf("{\n");
+    printf("\"v_x\" : [%e, %e],\n", m.v.x, sd.v.x);
+    printf("\"v_y\" : [%e, %e],\n", m.v.y, sd.v.y);
+    printf("\"power\" : [\n");
+    for (int i = 0; i <= number_of_waves; i++) {
+        printf("\t[%e, %e]", m.power[i], sd.power[i]);
+        putchar(",]"[i == number_of_waves]);
+        putchar("\n,"[i == number_of_waves]);
     }
-    printf("tau = %e +/- %e\n", m.tau, sd.tau);
-    printf("acoustic = %d +/- %d\n", m.acoustic_phonon_scattering_count, sd.acoustic_phonon_scattering_count);
-    printf("optical = %d +/- %d\n", m.optical_phonon_scattering_count, sd.optical_phonon_scattering_count);
-    printf("vertical = %d +/- %d\n", m.vertical_transitions_count, sd.vertical_transitions_count);
-    printf("population:\n");
+    printf("\n");
+    printf("\"tau\" : [%e, %e],\n", m.tau, sd.tau);
+    printf("\"acoustic\" : [%d, %d],\n", m.acoustic_phonon_scattering_count, sd.acoustic_phonon_scattering_count);
+    printf("\"optical\" : [%d, %d],\n", m.optical_phonon_scattering_count, sd.optical_phonon_scattering_count);
+    printf("\"vertical\" : [%d, %d],\n", m.vertical_transitions_count, sd.vertical_transitions_count);
+    printf("\"population\" : [\n");
     for (int i = 0; i < mat->bands.size(); i++) {
-        printf("\tband %d = %e +/- %e\n", i, m.population[i], sd.population[i]);
+        printf("\t[%e, %e]", m.population[i], sd.population[i]);
+        putchar(",]"[i == mat->bands.size() - 1]);
+        printf("\n");
     }
+    printf("}\n");
 
     /* debug info */
     FILE *f = fopen("tau.dat", "w");
