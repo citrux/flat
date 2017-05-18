@@ -18,12 +18,12 @@ struct Rng {
         y(362436069),
         z(521288629),
         w(88675123) {};
-    float uniform() {
+    double uniform() {
         unsigned int t = x ^ (x << 11);
         x = y;
         y = z;
         z = w;
         w = w ^ (w >> 19) ^ t ^ (t >> 8);
-        return ((float)w) / UINT_MAX;
+        return ((double)w) / UINT_MAX;
     }
 };

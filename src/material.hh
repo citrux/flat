@@ -8,10 +8,10 @@
 
 struct Wave {
     Vec2 E;
-    float H;
-    float omega;
-    float phi;
-    float photon_energy;
+    double H;
+    double omega;
+    double phi;
+    double photon_energy;
 };
 
 class Band;
@@ -19,7 +19,7 @@ class Band;
 class Particle {
 public:
     Vec2 p;
-    float r;
+    double r;
     Rng rng;
     Band *band;
     void reset_r();
@@ -27,61 +27,61 @@ public:
 };
 
 struct BandScatteringIntegral {
-    float momentum;
-    float integral;
+    double momentum;
+    double integral;
 };
 
 struct BandScatteringEntry {
-    float energy;
+    double energy;
     std::list<BandScatteringIntegral> integrals;
 };
 
 struct ScatteringResult {
-    float momentum;
-    float rate;
+    double momentum;
+    double rate;
 };
 
 class Band {
 public:
-    virtual float min_energy() const = 0;
-    virtual float energy(float momentum) const = 0;
-    virtual float energy(Vec2 const & momentum) const = 0;
-    virtual float velocity(float momentum) const = 0;
+    virtual double min_energy() const = 0;
+    virtual double energy(double momentum) const = 0;
+    virtual double energy(Vec2 const & momentum) const = 0;
+    virtual double velocity(double momentum) const = 0;
     virtual Vec2 velocity(Vec2 const & momentum) const = 0;
     virtual std::list<ScatteringResult> acoustic_phonon_scattering(Particle * p) = 0;
     virtual std::list<ScatteringResult> optical_phonon_scattering(Particle * p) = 0;
-    Vec2 momentum_scattering(float momentum, Particle * p);
+    Vec2 momentum_scattering(double momentum, Particle * p);
 };
 
 class Material {
 public:
     std::vector<Band*> bands;
     virtual Particle* create_particle(int seed) = 0;
-    virtual float vertical_transition(Particle * p, Band *from, Band *to, Wave const & wave, float de) = 0;
+    virtual double vertical_transition(Particle * p, Band *from, Band *to, Wave const & wave, double de) = 0;
 };
 
 namespace materials {
 
     class Bigraphene : public Material {
     public:
-        float delta;
-        Bigraphene(float temperature, float delta, float number_of_bands);
+        double delta;
+        Bigraphene(double temperature, double delta, double number_of_bands);
         Particle* create_particle(int seed);
-        float vertical_transition(Particle * p, Band *from, Band *to, Wave const & wave, float de);
+        double vertical_transition(Particle * p, Band *from, Band *to, Wave const & wave, double de);
     };
 
     class Graphene : public Material {
     public:
-        Graphene(float temperature, float delta);
+        Graphene(double temperature, double delta);
         Particle* create_particle(int seed);
-        float vertical_transition(Particle * p, Band *from, Band *to, Wave const & wave, float de) { return 0; };
+        double vertical_transition(Particle * p, Band *from, Band *to, Wave const & wave, double de) { return 0; };
     };
 }
 
 template <typename T>
-inline float bisection(T f, float xmin, float xmax, float precision) {
+inline double bisection(T f, double xmin, double xmax, double precision) {
     while (xmax - xmin > precision) {
-        float x = (xmax + xmin) / 2;
+        double x = (xmax + xmin) / 2;
         if (f(x) * f(xmin) <= 0) {
             xmax = x;
         } else {

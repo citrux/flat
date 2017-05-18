@@ -47,10 +47,10 @@ int main(int argc, char const *argv[])
 
     std::string material, material_name;
     Vec2 Ec;
-    float Hc, T;
+    double Hc, T;
     int n;
     int number_of_waves;
-    float dt, all_time;
+    double dt, all_time;
 
     /* input */
     std::cin >> material;
@@ -83,7 +83,7 @@ int main(int argc, char const *argv[])
         printf("Hc: %e\n", Hc);
     }
 
-    const float field_dimensionless_factor = e * v_f * dt / eV;
+    const double field_dimensionless_factor = e * v_f * dt / eV;
     Ec *= field_dimensionless_factor;
     Hc *= v_f / c * field_dimensionless_factor;
     for (auto & w: waves) {
@@ -96,15 +96,15 @@ int main(int argc, char const *argv[])
     int s = all_time / dt;
 
     std::vector<unsigned int> seeds(n);
-    float* dump;
-    if (dumping) { dump = new float[2 * n * s]; }
+    double* dump;
+    if (dumping) { dump = new double[2 * n * s]; }
     srand(time(nullptr));
     for (int i = 0; i < n; ++i) {
         seeds[i] = rand();
     }
     Material *mat;
     if (material_name == "bigraphene") {
-        float delta = 0;
+        double delta = 0;
         int number_of_bands = 1;
         if (material_params.size() > 1) {
             delta = atof(material_params[1].c_str());
@@ -114,13 +114,13 @@ int main(int argc, char const *argv[])
         }
         mat = new materials::Bigraphene(T, delta, number_of_bands);
     } else {
-        float delta = 0;
+        double delta = 0;
         if (material_params.size() > 1) {
             delta = atof(material_params[1].c_str());
         }
         mat = new materials::Graphene(T, delta);
     }
-    float de = 0;
+    double de = 0;
     std::vector<Data> datas(n, Data(waves.size(), mat->bands.size()));
     if (verbose) { puts("start calculation"); }
     /* first run: just calculate tau for calculating de */
@@ -130,11 +130,11 @@ int main(int argc, char const *argv[])
         particle->band = mat->bands[0];
         particle->p = {0, 0};
         /* Boltzmann-distributed initial condition */
-        float prob;
+        double prob;
         do {
-            float p = particle->rng.uniform();
+            double p = particle->rng.uniform();
             prob = particle->rng.uniform();
-            float theta = 2 * pi * particle->rng.uniform();
+            double theta = 2 * pi * particle->rng.uniform();
             particle->p = {p * std::cos(theta), p * std::sin(theta)};
         } while (exp(-(particle->band->energy(particle->p) - particle->band->min_energy()) / k / T) < prob);
         datas[i].power.assign(number_of_waves + 1, 0);
@@ -152,7 +152,7 @@ int main(int argc, char const *argv[])
             }
             int band_index = std::find(mat->bands.begin(), mat->bands.end(), particle->band) - mat->bands.begin();
             particle->p += f;
-            float wsum = 0;
+            double wsum = 0;
             for (auto const band: mat->bands) {
                 for (auto const & result: band->acoustic_phonon_scattering(particle))
                     wsum += result.rate;
@@ -175,11 +175,11 @@ int main(int argc, char const *argv[])
         particle->band = mat->bands[0];
         particle->p = {0, 0};
         /* Boltzmann-distributed initial condition */
-        float prob;
+        double prob;
         do {
-            float p = particle->rng.uniform();
+            double p = particle->rng.uniform();
             prob = particle->rng.uniform();
-            float theta = 2 * pi * particle->rng.uniform();
+            double theta = 2 * pi * particle->rng.uniform();
             particle->p = {p * std::cos(theta), p * std::sin(theta)};
         } while (exp(-(particle->band->energy(particle->p) - particle->band->min_energy()) / k / T) < prob);
         datas[i].power.assign(number_of_waves + 1, 0);
@@ -217,15 +217,15 @@ int main(int argc, char const *argv[])
             datas[i].v += v;
             datas[i].power[0] += v.dot(Ec);
             for (int j = 0; j < number_of_waves; j++) {
-                const float Ex = waves[j].E.x;
-                const float Ey = waves[j].E.y;
-                const float omega = waves[j].omega;
-                const float phi = waves[j].phi;
+                const double Ex = waves[j].E.x;
+                const double Ey = waves[j].E.y;
+                const double omega = waves[j].omega;
+                const double phi = waves[j].phi;
                 Vec2 E = { Ex*std::cos(omega*t), Ey*std::cos(omega*t+phi) };
                 datas[i].power[j+1] += v.dot(E);
             }
             particle->p += f;
-            float wsum = 0;
+            double wsum = 0;
             for (auto const band: mat->bands) {
                 for (auto const & result: band->acoustic_phonon_scattering(particle))
                     wsum += result.rate;
@@ -238,7 +238,7 @@ int main(int argc, char const *argv[])
             }
             particle->r -= wsum * dt;
             if (particle->r < 0) {
-                float w = particle->rng.uniform() * wsum;
+                double w = particle->rng.uniform() * wsum;
                 for (auto const band: mat->bands) {
                     for (auto const & result: band->acoustic_phonon_scattering(particle)) {
                         w -= result.rate;
@@ -281,15 +281,15 @@ int main(int argc, char const *argv[])
     }
     if (dumping) {
         FILE *fd = fopen(dumpname, "wb");
-        fwrite(&n, sizeof(float), 1, fd);
-        fwrite(&s, sizeof(float), 1, fd);
-        fwrite(dump, sizeof(float), 2 * n * s, fd);
+        fwrite(&n, sizeof(double), 1, fd);
+        fwrite(&s, sizeof(double), 1, fd);
+        fwrite(dump, sizeof(double), 2 * n * s, fd);
         fclose(fd);
     }
     /* statistics */
-    float student_coeff = 3;
+    double student_coeff = 3;
     Data m = mean(datas);
-    Data sd = stdev(datas) / (float)std::sqrt(n) * student_coeff;
+    Data sd = stdev(datas) / (double)std::sqrt(n) * student_coeff;
 
     /* output (stdout) */
     printf("{\n");
