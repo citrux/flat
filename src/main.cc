@@ -231,10 +231,8 @@ int main(int argc, char const *argv[])
                     wsum += result.rate;
                 for (auto const & result: band->optical_phonon_scattering(particle))
                     wsum += result.rate;
-                for (auto const dest_band: mat->bands)
-                    for (auto const & wave: waves) {
-                        wsum += mat->vertical_transition(particle, band, dest_band, wave, de);
-                    }
+                for (auto const & wave: waves)
+                    wsum += mat->vertical_transition(particle, band, wave, de);
             }
             particle->r -= wsum * dt;
             if (particle->r < 0) {
@@ -260,15 +258,23 @@ int main(int argc, char const *argv[])
                             goto end;
                         }
                     }
-                for (auto const dest_band: mat->bands)
-                    for (auto const & wave: waves)
-                        w -= mat->vertical_transition(particle, band, dest_band, wave, de);
+                    for (auto const & wave: waves) {
+                        w -= mat->vertical_transition(particle, band, wave, de);
                         if (w < 0) {
                             ++datas[i].vertical_transitions_count;
+                            int wave_index = 0;
+                            for (int i = 0; i < waves.size(); ++i) {
+                                if (&wave == &waves[i]) {
+                                    wave_index = i;
+                                }
+                            }
+                            datas[i].power[wave_index + 1] += band->energy(particle->p) -
+                                particle->band->energy(particle->p);
                             particle->reset_r();
                             particle->band = band;
                             goto end;
                         }
+                    }
                 }
             }
             end:
@@ -289,7 +295,7 @@ int main(int argc, char const *argv[])
     /* statistics */
     double student_coeff = 3;
     Data m = mean(datas);
-    Data sd = stdev(datas) / (double)std::sqrt(n) * student_coeff;
+    Data sd = stdev(datas) / std::sqrt(n) * student_coeff;
 
     /* output (stdout) */
     printf("{\n");

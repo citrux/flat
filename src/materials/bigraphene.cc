@@ -70,10 +70,10 @@ public:
 
 Particle* Bigraphene::create_particle(int seed) {return new BigrapheneParticle(seed);}
 
-double Bigraphene::vertical_transition(Particle * p, Band *from, Band *to, Wave const & wave, double de) {
-    if (from == to) { return 0; }
-    double e1 = from->energy(p->p);
-    double e2 = to->energy(p->p);
+double Bigraphene::vertical_transition(Particle * p, Band *dest, Wave const & wave, double de) {
+    if (p->band == dest) { return 0; }
+    double e1 = p->band->energy(p->p);
+    double e2 = dest->energy(p->p);
     double d = delta;
     double p2 = p->p.dot(p->p);
     double g = gamma;

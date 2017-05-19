@@ -14,6 +14,7 @@ struct Wave {
     double photon_energy;
 };
 
+
 class Band;
 
 class Particle {
@@ -57,7 +58,7 @@ class Material {
 public:
     std::vector<Band*> bands;
     virtual Particle* create_particle(int seed) = 0;
-    virtual double vertical_transition(Particle * p, Band *from, Band *to, Wave const & wave, double de) = 0;
+    virtual double vertical_transition(Particle * p, Band *dest, Wave const & wave, double de) = 0;
 };
 
 namespace materials {
@@ -67,14 +68,14 @@ namespace materials {
         double delta;
         Bigraphene(double temperature, double delta, double number_of_bands);
         Particle* create_particle(int seed);
-        double vertical_transition(Particle * p, Band *from, Band *to, Wave const & wave, double de);
+        double vertical_transition(Particle * p, Band *dest, Wave const & wave, double de);
     };
 
     class Graphene : public Material {
     public:
         Graphene(double temperature, double delta);
         Particle* create_particle(int seed);
-        double vertical_transition(Particle * p, Band *from, Band *to, Wave const & wave, double de) { return 0; };
+        double vertical_transition(Particle * p, Band *dest, Wave const & wave, double de) { return 0; };
     };
 }
 
