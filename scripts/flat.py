@@ -24,7 +24,6 @@ class Flat:
         out, err = Popen([self.program], shell=True, stdin=PIPE, stdout=PIPE)\
                    .communicate(input=self.args.encode("utf8"))
         data = out.decode("utf8")
-        print(data)
         if verbose:
             print(data)
         return json.loads(data)
