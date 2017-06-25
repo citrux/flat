@@ -1,6 +1,7 @@
+#include <cstdio>
+
 #include "material.hh"
 #include "physics.hh"
-#include <cstdio>
 
 /*
  * Particle

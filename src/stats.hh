@@ -1,3 +1,5 @@
+#pragma once
+
 #include "vec2.hh"
 /*
 * ## Structure for results

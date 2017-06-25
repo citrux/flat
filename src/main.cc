@@ -1,6 +1,3 @@
-#include "material.hh"
-#include "physics.hh"
-#include "stats.hh"
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
@@ -11,6 +8,10 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include "material.hh"
+#include "physics.hh"
+#include "stats.hh"
 
 template <typename Out>
 void split(const std::string &s, char delim, Out result) {

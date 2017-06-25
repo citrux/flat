@@ -69,9 +69,8 @@ std::list<ScatteringResult> Bnd::acoustic_phonon_scattering(Particle *p) {
   std::list<ScatteringResult> result;
   if (e > delta) {
     double momentum = std::sqrt(e * e - delta * delta);
-    result.push_back(
-        {momentum,
-         acoustic_phonon_constant * 2 * pi * momentum / velocity(momentum)});
+    result.push_back({momentum, acoustic_phonon_constant * 2 * pi * momentum /
+                                    velocity(momentum)});
   }
   return result;
 }
@@ -81,9 +80,8 @@ std::list<ScatteringResult> Bnd::optical_phonon_scattering(Particle *p) {
   std::list<ScatteringResult> result;
   if (e > delta) {
     double momentum = std::sqrt(e * e - delta * delta);
-    result.push_back(
-        {momentum,
-         optical_phonon_constant * 2 * pi * momentum / velocity(momentum)});
+    result.push_back({momentum, optical_phonon_constant * 2 * pi * momentum /
+                                    velocity(momentum)});
   }
   return result;
 }

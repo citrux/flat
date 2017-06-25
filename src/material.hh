@@ -1,10 +1,11 @@
 #pragma once
 
-#include "rng.hh"
-#include "vec2.hh"
 #include <list>
 #include <string>
 #include <vector>
+
+#include "rng.hh"
+#include "vec2.hh"
 
 struct Wave {
   Vec2 E;

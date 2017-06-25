@@ -148,17 +148,15 @@ Lower::Lower(double temperature, double _delta) : delta(_delta) {
       double p = bisection([this, e](double p) { return energy(p) - e; }, 0,
                            crit_momentum, momentum_precision);
       table[i].integrals.push_back(
-          {p,
-           2.0f * pi * p /
-               (double)std::sqrt(std::pow(velocity(p), 2) + 1e-3f)});
+          {p, 2.0f * pi * p /
+                  (double)std::sqrt(std::pow(velocity(p), 2) + 1e-3f)});
     }
     if (e < max_energy) {
       double p = bisection([this, e](double p) { return energy(p) - e; },
                            crit_momentum, max_momentum, momentum_precision);
       table[i].integrals.push_back(
-          {p,
-           2.0f * pi * p /
-               (double)std::sqrt(std::pow(velocity(p), 2) + 1e-3f)});
+          {p, 2.0f * pi * p /
+                  (double)std::sqrt(std::pow(velocity(p), 2) + 1e-3f)});
     }
   }
 }
