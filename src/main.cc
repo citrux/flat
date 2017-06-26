@@ -104,7 +104,7 @@ int main(int argc, char const *argv[]) {
     seeds[i] = rand();
   }
   Material *mat;
-  if (material_name == "bigraphene") {
+  if (material_name == "bigraphenekplus") {
     double delta = 0;
     int number_of_bands = 1;
     if (material_params.size() > 1) {
@@ -113,7 +113,17 @@ int main(int argc, char const *argv[]) {
     if (material_params.size() > 2) {
       number_of_bands = atoi(material_params[2].c_str());
     }
-    mat = new materials::Bigraphene(T, delta, number_of_bands);
+    mat = new materials::BigrapheneKPlus(T, delta, number_of_bands);
+  } else if (material_name == "bigraphenekminus") {
+    double delta = 0;
+    int number_of_bands = 1;
+    if (material_params.size() > 1) {
+      delta = atof(material_params[1].c_str());
+    }
+    if (material_params.size() > 2) {
+      number_of_bands = atoi(material_params[2].c_str());
+    }
+    mat = new materials::BigrapheneKMinus(T, delta, number_of_bands);
   } else {
     double delta = 0;
     if (material_params.size() > 1) {

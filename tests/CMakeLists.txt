@@ -12,7 +12,3 @@ if (GTEST_FOUND)
     target_compile_features(rng PRIVATE cxx_auto_type)
     target_link_libraries(rng ${GTEST_LIBRARIES} pthread)
 endif()
-
-
-
-

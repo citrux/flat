@@ -31,7 +31,7 @@ Graphene::Graphene(double temperature, double delta) {
   bands = {band};
 }
 
-Particle *Graphene::create_particle(int seed) { return new Particle(seed); }
+Particle *Graphene::create_particle(int seed) { return new Particle(this, seed); }
 
 Bnd::Bnd(double temperature, double _delta) : delta(_delta) {
   const double T = temperature;

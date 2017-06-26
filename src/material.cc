@@ -6,7 +6,8 @@
 /*
  * Particle
  */
-Particle::Particle(unsigned int seed) {
+Particle::Particle(Material* m, unsigned int seed) {
+  material = m;
   rng = Rng(seed);
   reset_r();
 }

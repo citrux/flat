@@ -63,19 +63,11 @@ Bigraphene::Bigraphene(double temperature, double delta, double number_of_bands)
   }
 }
 
-class BigrapheneParticle : public Particle {
-public:
-  int valley;
-  BigrapheneParticle(int seed) : Particle(seed) {
-    valley = (rng.uniform() > 0.5) ? 1 : -1;
-  }
-};
-
 Particle *Bigraphene::create_particle(int seed) {
-  return new BigrapheneParticle(seed);
+  return new Particle(this, seed);
 }
 
-double Bigraphene::vertical_transition(Particle *p, Band *dest,
+double Bigraphene::vertical_transition_helper(Particle *p, Band *dest, int valley,
                                        Wave const &wave, double de) {
   if (p->band == dest) {
     return 0;
@@ -86,7 +78,7 @@ double Bigraphene::vertical_transition(Particle *p, Band *dest,
   double p2 = p->p.dot(p->p);
   double g = gamma;
   double g2 = g * g;
-  double xi = ((BigrapheneParticle *)p)->valley; // fix it!!!
+  double xi = valley;
   double theta = std::atan2(p->p.y, p->p.x);
   double a = g2 * (e1 - d) * (e2 - d) / wave.omega;
   double b =
@@ -108,6 +100,16 @@ double Bigraphene::vertical_transition(Particle *p, Band *dest,
   double norm = norm1 * norm2;
   return pi / 8 / hbar * c.dot(c) / norm *
          dirac_delta(std::abs(e2 - e1) - wave.photon_energy, de);
+}
+
+double BigrapheneKPlus::vertical_transition(Particle *p, Band *dest,
+                                       Wave const &wave, double de) {
+  return vertical_transition_helper(p, dest, 1, wave, de);
+}
+
+double BigrapheneKMinus::vertical_transition(Particle *p, Band *dest,
+                                       Wave const &wave, double de) {
+  return vertical_transition_helper(p, dest, -1, wave, de);
 }
 
 const double rho = 2 * 7.7e-8;
